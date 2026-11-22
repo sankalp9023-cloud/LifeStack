@@ -1,80 +1,53 @@
 # LifeStack
 
-> **A premium futuristic personal productivity and life-management ecosystem.**
+LifeStack is a responsive personal productivity app for study tracking, projects, tasks, and personal settings. The current client is a React single-page application; its feature data is persisted in the browser. A minimal TypeScript/Fastify API foundation is initialized; domain APIs and database persistence are not yet implemented.
 
-LifeStack unifies personal development, deep work tracking, and task orchestration into a cohesive, neural-inspired digital command center.
-
----
-
-## 🚀 Architecture Overview
-
-LifeStack is structured with strict separation between frontend, future backend, documentation, and assets:
+## Repository
 
 ```text
 LifeStack/
-├── frontend/             # React + Vite + Tailwind CSS (JavaScript ES6+)
-├── backend/              # Future backend services (Planned separately)
-├── docs/                 # Architectural specs, roadmaps, and design guidelines
-├── assets/               # Branding assets and reference mockups
-├── .gitignore            # Git exclusion rules
-└── README.md             # Project documentation entry
+├── frontend/   # React + Vite application
+├── backend/    # TypeScript/Fastify API foundation
+├── docs/       # Product, architecture, design, and implementation plans
+└── assets/     # Brand and visual reference material
 ```
 
-For complete architectural details, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+## Current features
 
----
+- **Dashboard:** Live summaries from Study, Projects, Tasks, and reminder settings; overall progress across trackable modules.
+- **Study:** Subjects, chapters, topics, learning activities, notes, revisions, practice sessions, assessments, study sessions, and progress charts.
+- **Projects:** Projects, milestones, notes, resources, important dates, activity, linked tasks, project status and progress charts.
+- **Tasks:** Personal and project-linked tasks, status, due dates, categories, tags, subtasks, and task analytics.
+- **Settings:** General and appearance preferences, notifications, module preferences, data export/import, backups, and system information.
 
-## 🛠️ Technology Stack
+Progress charts use the records already stored by each feature. They do not yet represent historical progress snapshots.
 
-### Frontend
-- **Framework:** [React 18+](https://react.dev/) (JavaScript ES6+)
-- **Build Tool:** [Vite](https://vitejs.dev/)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/) & CSS3 (Glassmorphism & Orbital layout engine)
-- **Routing:** [React Router v6+](https://reactrouter.com/)
-- **Icons:** [Lucide React](https://lucide.dev/)
+## Technology
 
-### Backend
-- Uninitialized. Backend architecture and stack will be planned following completion of the frontend modules. See [backend/README.md](backend/README.md).
+- React 18, JavaScript, Vite, Tailwind CSS
+- React Router and Lucide icons
+- Versioned browser `localStorage` repositories for Study, Projects, Tasks, and Settings
+- Backend currently exposes a liveness check only; no database, authentication, or cloud sync is implemented
 
----
+## Run the frontend
 
-## 📂 Modules & Scope
+Requirements: Node.js 18 or newer and npm.
 
-### Phase 1 Initial Scope (Active)
-1. **Command Dashboard:** Central neural-brain visualization with surrounding organic glass orbital panels.
-2. **Study Management:** Deep work timers, subject trees, retention analytics.
-3. **Project Management:** Milestone trackers, Kanban lifecycle execution, priority scoring.
-
-### Phase 2 Scope (Future)
-- **Fitness Management:** Workout regimes, recovery metrics.
-- **Event Management:** Temporal agenda and life calendar.
-
----
-
-## 💻 Getting Started
-
-### Prerequisites
-- Node.js (v18.x or v20+ LTS recommended)
-- npm (v9+)
-
-### Installation & Development
 ```bash
-# Navigate to the frontend directory
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-The application will launch locally at `http://localhost:5173/`.
+Other frontend scripts: `npm run build`, `npm run preview`, and `npm test`.
 
----
+## Documentation
 
-## 📖 Documentation Directory
-- [Project Overview](docs/PROJECT_OVERVIEW.md)
-- [Architecture & Standards](docs/ARCHITECTURE.md)
-- [Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)
-- [Design Guidelines](docs/DESIGN_GUIDELINES.md)
+- [Project overview](docs/PROJECT_OVERVIEW.md)
+- [Current architecture](docs/ARCHITECTURE.md)
+- [Design guidelines](docs/DESIGN_GUIDELINES.md)
+- [Development roadmap](docs/DEVELOPMENT_ROADMAP.md)
+- [Backend plan](docs/BACKEND_PLAN.md)
+- [Backend data model and migration plan](docs/BACKEND_DATA_MODEL.md)
+- [OpenAPI contract draft](docs/lifestack-api-v1.openapi.yaml)
+- [Backend folder entry point](backend/README.md)

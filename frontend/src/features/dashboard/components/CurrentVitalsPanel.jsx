@@ -30,7 +30,7 @@ export default function CurrentVitalsPanel({ className = '' }) {
         <Vital label="Study topics" value={`${study.completedTopics}/${study.topicCount}`} href="/study" />
         <Vital label="Milestones" value={milestones.filter((item) => item.completed).length + `/${milestones.length}`} href="/projects" />
       </div>
-      <div className="flex items-center justify-between pt-2 pb-0.5 border-t border-white/[0.06]">
+      <div className="flex items-center justify-between pt-2 pb-0.5">
         <span className="text-[10px] text-slate-400 font-medium">Workspace reminders</span>
         <Link to="/settings" className="text-[10.5px] text-navy-200 underline underline-offset-2">{remindersEnabled ? 'On' : 'Off'} · Settings</Link>
       </div>

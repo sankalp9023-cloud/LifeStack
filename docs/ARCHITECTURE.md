@@ -1,112 +1,64 @@
-# LifeStack — System Architecture & Standards
+# LifeStack — Current Architecture
 
-## 1. High-Level Architecture
+## System shape
 
-LifeStack adopts a decoupled **Frontend-First Architecture**. The client-side application is entirely self-sufficient in layout, state orchestration, routing, and component presentation.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      LifeStack Client                       │
-├─────────────────────────────────────────────────────────────┤
-│  Top Navigation Toolbar (Compact, Persistent, Non-Sidebar) │
-├─────────────────────────────────────────────────────────────┤
-│  View Router (React Router v6+)                             │
-│  ├─ /           (Configured default landing route)          │
-│  ├─ /dashboard  (Dashboard - Neural Brain Core & Orbitals)  │
-│  ├─ /study      (Study Management & Cognitive Tracking)     │
-│  ├─ /projects   (Project & Task Lifecycle Execution)        │
-│  └─ /settings   (System Preferences & Customization)        │
-├─────────────────────────────────────────────────────────────┤
-│  Feature Modules (Modular Hooks, Services, Component Trees) │
-│  ├─ features/dashboard                                      │
-│  ├─ features/study                                          │
-│  ├─ features/projects                                       │
-│  └─ services/taskRepository                                 │
-├─────────────────────────────────────────────────────────────┤
-│  Shared Foundation                                          │
-│  ├─ Common UI & Glass Panels (translucent, curved)          │
-│  ├─ Design Tokens & Tailwind Utility Engine                 │
-│  └─ Global Context & Shared Utility Functions               │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 2. Directory Structure Principles
-
-The project hierarchy strictly enforces domain boundaries:
+LifeStack's product data currently lives in a browser-based React single-page app. React Router selects pages inside a shared layout, and feature repositories persist versioned records in `localStorage`. The TypeScript/Fastify API provides PostgreSQL connectivity, email/password and Google account sign-in, and server-side sessions; feature data routes and frontend API integration remain unimplemented.
 
 ```text
-LifeStack/
-├── frontend/             # Client-side SPA (React, Vite, Tailwind CSS)
-│   ├── public/           # Static unbundled assets
-│   ├── src/
-│   │   ├── assets/       # Bundled static media (images, icons, backgrounds)
-│   │   ├── components/   # Cross-cutting reusable UI primitives
-│   │   │   ├── common/   # Universal widgets (Spinners, Badges, Modals)
-│   │   │   ├── navigation/  # Compact top toolbar and navigation pills
-│   │   │   ├── panels/   # Organic glass panels and orbital containers
-│   │   │   └── ui/       # Form controls, buttons, tooltips
-│   │   ├── layouts/      # App scaffolding and layout shells
-│   │   ├── pages/        # Route entry-point views
-│   │   ├── features/     # Encapsulated domain logic
-│   │   │   ├── dashboard/   # Dashboard widgets, orbital data, state hooks
-│   │   │   ├── study/       # Study metrics, session logs, topic trees
-│   │   │   └── projects/    # Project boards, milestone trackers
-│   │   ├── hooks/        # Global custom React hooks
-│   │   ├── context/      # Application-wide React Context providers
-│   │   ├── services/     # API abstraction layer and data transport
-│   │   ├── utils/        # Pure helper functions, formatting, math
-│   │   ├── constants/    # Design tokens, config constants, routes
-│   │   ├── styles/       # Tailwind entry, animations, glassmorphism CSS
-│   │   └── routes/       # Central route configuration and guards
-├── backend/              # Future backend services (Uninitialized)
-├── docs/                 # Architectural specifications and roadmaps
-└── assets/               # External reference designs, logos, and mockups
+Browser
+├── RootLayout + top navigation
+├── Pages: Dashboard, Study, Projects, Tasks, Settings
+├── Feature modules
+│   ├── dashboard: cross-module read-only summaries
+│   ├── study: studyRepository + studyMetrics
+│   ├── projects: projectRepository + projectMetrics
+│   ├── tasks: taskRepository
+│   └── settings: settingsStore + backup/reminder services
+└── localStorage (versioned feature records and backups)
+
+Planned: frontend services → authenticated versioned API → PostgreSQL feature repositories
 ```
 
-## 3. Component Architecture Guidelines
+## Frontend stack and entry points
 
-1. **Pure & Modular Primitives:** Keep generic components inside `components/ui` and `components/panels`. They must not depend on domain-specific feature state.
-2. **Domain Encapsulation:** Any component specific to a domain (e.g., `StudyTimer`, `ProjectCard`) belongs strictly in `features/<domain>/components/`.
-3. **No Monster Files:** Files should remain focused and single-responsibility. Decompose complex widgets into composable subcomponents.
-4. **Data Isolation:** Mock datasets, sample schemas, and feature-specific hooks live alongside their respective feature directories (`features/<domain>/data` and `features/<domain>/hooks`).
-5. **No Sidebar Mandate:** The layout strictly avoids left sidebars to maximize horizontal visual canvas for the central neural core and surrounding orbital elements.
+- React, JavaScript modules, Vite, Tailwind CSS, React Router, and Lucide icons.
+- `frontend/src/main.jsx` mounts the app; `App.jsx` installs settings and routing; `routes/AppRoutes.jsx` maps URLs to pages; `layouts/RootLayout.jsx` provides the viewport shell and navigation.
+- `frontend/src/pages/` contains route-level composition. Domain logic and feature UI live under `frontend/src/features/`.
+- Shared UI lives under `frontend/src/components/`; global theme tokens and primitives are defined in `frontend/src/styles/index.css` and `frontend/tailwind.config.js`.
+- Responsive pages fill the available viewport width, use the browser's dynamic viewport height, and scroll within the content area when their content exceeds the view.
 
-## 4. Study Data and Persistence
+## Feature boundaries
 
-The Study feature uses a normalized, versioned record in browser `localStorage`
-(`lifestack.study.v1`). `features/study/data/studyRepository.js` owns validation,
-relationship checks, mutations, and cascade behavior; the Study page consumes
-it through `features/study/hooks/useStudyData.js`. Dashboard metrics are derived
-from persisted records in `features/study/data/studyMetrics.js`.
+| Area | Data owner | Main behavior |
+|---|---|---|
+| Dashboard | No separate repository | Reads Study, Projects, Tasks, and Settings stores; derives summary and progress values. |
+| Study | `features/study/data/studyRepository.js` | Subjects, chapters, topics, learning activities, notes, revisions, practice sessions, assessments, and study sessions. Metrics are in `studyMetrics.js`. |
+| Projects | `features/projects/data/projectRepository.js` | Projects, milestones, notes, resources, important dates, and activity. Metrics are in `projectMetrics.js`. |
+| Tasks | `services/taskRepository.js` | Personal and project-linked tasks, subtasks, status, dates, and categories. |
+| Settings | `features/settings/data/settingsStore.js` | Validated preferences, browser notifications, backups, import, and export. |
 
-Subjects own chapters, chapters own topics, and topic-linked learning activities
-and revision records retain their topic IDs. Notes, practice sessions,
-assessments, and study sessions retain their subject/topic associations where
-applicable. Deleting a subject removes its dependent subject data; deleting a
-chapter or topic removes topic-specific learning/revision records and detaches
-topic links from retained notes and history.
+Repository hooks subscribe to changes and storage events so views can refresh when data changes in the current browser profile. Project data composes the task store to support project-linked tasks.
 
-The browser storage record is local to the current browser profile. It does not
-provide cloud synchronization, cross-device backup, or account-level isolation.
+## Current persistence
 
-## 5. Central Settings and Application Data
+| Data | Storage key | Record shape |
+|---|---|---|
+| Study | `lifestack.study.v1` | Versioned object containing the Study collections. |
+| Projects | `lifestack.projects.v1` | Collections for projects, milestones, notes, resources, important dates, and activities. |
+| Tasks | `lifestack.tasks.v1` | Tasks collection. |
+| Settings | `lifestack.settings.v1` | Versioned validated settings object. |
+| Manual backups | `lifestack.backups.v1` | Browser-local backup records. |
 
-Settings are defined and validated in `features/settings/data/settingsSchema.js`
-and persisted by `features/settings/data/settingsStore.js` under
-`lifestack.settings.v1`. `SettingsProvider` exposes current preferences and
-applies theme, accent, density, and application-mode values to the document
-root. Other modules can subscribe through `features/settings/hooks/useSettings`
-and register validated module-specific defaults.
+Local storage is not a secure multi-user database and does not synchronize between browsers or devices. The current app has data export/import and backup support; the future backend plan describes how to transition without discarding those records.
 
-The centralized reminder scheduler uses the browser Notification API for
-upcoming Study assessments and pending revisions. The app must be open and
-notification permission granted for scheduled delivery; browser notification
-history and sound preferences are managed centrally.
+## Derived progress
 
-Versioned app backups include Settings, Study, Projects, and Tasks data.
-`features/settings/data/backupService.js` validates backups before restore,
-preserves module relationships, supports local manual backups, and allows
-future modules to register backup adapters. Projects and Tasks repositories
-provide validated replacement operations so restored snapshots update active
-subscribers. Manual backups are kept in browser local storage separately from
-exported app data to avoid recursive backups.
+Dashboard and feature charts derive progress from current records. Study completion is calculated from completed learning requirements. Task completion uses task status. Project progress is derived from linked tasks and milestones, with the existing project completion rule. These values are not historical snapshots, so the current graphs show a present-state comparison rather than a timeline.
+
+## Backend boundary
+
+The backend currently has only a minimal TypeScript/Fastify API foundation and liveness route; domain persistence remains planned. Proposed API and data ownership boundaries are documented in [Backend Plan](BACKEND_PLAN.md) and [Backend Data Model](BACKEND_DATA_MODEL.md). Frontend components should continue to consume hooks/repositories; future API transport should be introduced behind those data boundaries rather than inside visual components.
+
+The reviewed PostgreSQL schema and idempotent local-data migration plan are in
+[Data Model and Migration](DATA_MODEL_AND_MIGRATION.md) and
+[backend/prisma/migrations/20261122000000_initial/migration.sql](../backend/prisma/migrations/20261122000000_initial/migration.sql).

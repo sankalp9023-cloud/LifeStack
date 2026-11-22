@@ -9,10 +9,10 @@ export default function FeatureSectionNav({ label, items, activeId, onChange }) 
           type="button"
           onClick={() => onChange(item.id)}
           aria-current={activeId === item.id ? 'page' : undefined}
-          className={`border px-3 py-1.5 text-sm ${
+          className={`hud-section-nav-button border px-3 py-1.5 text-sm ${
             activeId === item.id
-              ? 'is-active border-blue-300 bg-blue-950/70 font-medium text-white'
-              : 'border-slate-700 text-slate-300 hover:bg-slate-800/60'
+              ? 'is-active font-medium'
+              : 'text-slate-300'
           }`}
         >
           {item.label}{item.count !== undefined ? ` (${item.count})` : ''}

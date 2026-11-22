@@ -116,7 +116,7 @@ export default function ProjectTasksManager({
   return (
     <div className="space-y-4">
       {/* Header & Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
         <h3 className="text-lg font-semibold text-slate-100">
           Tasks ({projectTasks.filter((t) => t.completed).length}/{projectTasks.length} completed)
         </h3>
@@ -297,7 +297,7 @@ export default function ProjectTasksManager({
           No tasks match the active filters.
         </p>
       ) : (
-        <div className="divide-y divide-slate-800 border border-slate-800 rounded bg-slate-900/40">
+        <div className="space-y-1">
           {filteredTasks.map((t) => {
             const daysDiff = getDaysDiff(t.dueDate);
             const isOverdue = !t.completed && daysDiff !== null && daysDiff < 0;

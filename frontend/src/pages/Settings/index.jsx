@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { ArrowLeft, X } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Check, LogOut, Pencil, User, X } from 'lucide-react';
 import packageInfo from '../../../package.json';
 import useSettings from '@/features/settings/hooks/useSettings';
+import { useAuth } from '@/context/AuthContext';
+import { ROUTES } from '@/constants/routes';
 import {
   getRegisteredModuleSettings,
   getLeadHourOptions,
@@ -13,39 +15,44 @@ import {
   requestNotificationPermission,
 } from '@/features/settings/data/notificationService';
 import { formatSettingsDateTime } from '@/features/settings/data/settingsFormatters';
-import SettingsDataManagement from '@/features/settings/components/SettingsDataManagement';
 import SystemInformation from '@/features/settings/components/SystemInformation';
 import FeaturePageHeader from '@/components/ui/FeaturePageHeader';
 
 const SECTIONS = [
-  ['general', 'General'],
   ['appearance', 'Appearance'],
   ['notifications', 'Notifications'],
   ['modules', 'Modules'],
-  ['privacy', 'Privacy'],
-  ['data', 'Data management'],
   ['system', 'System information'],
+];
+const PROFILE_MENU_LINKS = [
+  ...SECTIONS,
+  ['terms', 'Terms & Conditions'],
+  ['about', 'About LifeStack'],
+  ['logout', 'Log out'],
+  ['deleteAccount', 'Delete account'],
 ];
 
 const FIELD_CLASS = 'mt-1 w-full rounded border border-slate-600 bg-slate-950 p-2 text-sm';
 
-export default function SettingsPage({ dialogMode = false, dialogSection, onClose, onBackToMenu }) {
+export default function SettingsPage({ dialogMode = false, dialogSection, onClose, onNavigateSection }) {
   const { settings, settingsStore, error: storageError } = useSettings();
+  const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedSection = searchParams.get('section');
   const section = dialogSection || (requestedSection === 'profile'
     ? 'profile'
-    : SECTIONS.some(([id]) => id === requestedSection) ? requestedSection : 'general');
+    : SECTIONS.some(([id]) => id === requestedSection) ? requestedSection : 'menu');
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [profileNameDraft, setProfileNameDraft] = useState(settings.profile.displayName);
+  const [loggedOutNotice, setLoggedOutNotice] = useState(false);
 
   const updateCategory = (category, patch) => {
     try {
       settingsStore.updateCategory(category, patch);
       setError('');
-      setNotice('Settings saved.');
     } catch (saveError) {
-      setNotice('');
       setError(saveError instanceof Error ? saveError.message : 'Settings could not be saved.');
     }
   };
@@ -53,79 +60,199 @@ export default function SettingsPage({ dialogMode = false, dialogSection, onClos
     try {
       settingsStore.updateModule(moduleId, patch);
       setError('');
-      setNotice('Settings saved.');
     } catch (saveError) {
-      setNotice('');
       setError(saveError instanceof Error ? saveError.message : 'Module settings could not be saved.');
     }
   };
-  const updateApplicationMode = (mode) => {
+  const saveProfileName = (event) => {
+    event.preventDefault();
     try {
-      settingsStore.updateValue('applicationMode', mode);
+      if (!settingsStore) throw new Error('Profile settings are unavailable.');
+      settingsStore.updateCategory('profile', { displayName: profileNameDraft.trim() });
+      setEditingName(false);
       setError('');
-      setNotice('Settings saved.');
     } catch (saveError) {
-      setNotice('');
-      setError(saveError instanceof Error ? saveError.message : 'Application mode could not be saved.');
+      setError(saveError instanceof Error ? saveError.message : 'Profile name could not be saved.');
     }
   };
   const report = (message, isError = false) => {
     setError(isError ? message : '');
-    setNotice(isError ? '' : message);
+  };
+  const backToMenu = () => {
+    if (dialogMode && onNavigateSection) {
+      onNavigateSection('profile');
+    } else {
+      navigate('/settings');
+    }
   };
 
   return (
     <div className={`select-text min-w-0 ${dialogMode ? 'h-full w-full overflow-y-auto p-4' : 'min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8'}`}>
       <div className={`${dialogMode ? 'space-y-4' : 'mx-auto w-full max-w-none space-y-5'}`}>
         {dialogMode ? (
-          <header className="flex items-start justify-between gap-3 border-b border-slate-700 pb-3">
-            <div className="min-w-0">
-              {onBackToMenu && (
+          <header className="flex items-start justify-between gap-3 pb-3">
+            <div className="flex min-w-0 items-center gap-2">
+              {onNavigateSection && section !== 'profile' && (
                 <button
                   type="button"
-                  onClick={onBackToMenu}
-                  className="mb-2 flex items-center gap-1.5 text-xs font-medium text-cyan-300 hover:text-cyan-200"
+                  onClick={backToMenu}
+                  className="settings-back-button"
+                  aria-label="Back to settings menu"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  Back to settings menu
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Menu</span>
                 </button>
               )}
+              <h2 className="mt-1 inline-block text-lg font-semibold text-slate-100 align-middle">
+                {section === 'profile' ? 'Profile' : PROFILE_MENU_LINKS.find(([id]) => id === section)?.[1] || 'Settings'}
+              </h2>
             </div>
             <button type="button" aria-label="Close profile and settings panel" onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white">
               <X className="h-5 w-5" />
             </button>
           </header>
         ) : (
-          <FeaturePageHeader
-            title="Settings"
-            description="Application preferences and local data controls."
-          />
+          <div className="settings-page-heading">
+            {section !== 'menu' && (
+              <button type="button" onClick={backToMenu} className="settings-back-button" aria-label="Back to settings menu">
+                <ArrowLeft className="h-4 w-4" />
+                <span>Settings menu</span>
+              </button>
+            )}
+            <FeaturePageHeader
+              title="Settings"
+              description="Application preferences and local data controls."
+            />
+          </div>
         )}
 
         {(storageError || error) && <div role="alert" className="rounded border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">{storageError ? `Saved settings are unavailable: ${storageError.message}` : error}</div>}
-        {notice && !error && !storageError && <p role="status" className="text-sm text-blue-300">{notice}</p>}
 
-        {section === 'profile' ? (
-          <section className="space-y-4 rounded border border-slate-800 bg-slate-900/50 p-4">
-            <h2 className="font-semibold">Profile</h2>
+        {section === 'menu' ? (
+          <SettingsMenu
+            sections={SECTIONS}
+            onNavigate={(id) => navigate(`/settings?section=${encodeURIComponent(id)}`)}
+          />
+        ) : section === 'profile' ? (
+          <section className="profile-settings-card space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
             <div className="flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 text-lg font-semibold text-white">S</span>
-              <div>
-                <p className="font-medium text-slate-100">Sam</p>
-                <p className="text-sm text-slate-400">LifeStack profile</p>
-              </div>
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 text-lg font-semibold text-white">
+                {settings.profile.displayName.trim().charAt(0).toUpperCase()}
+              </span>
+              {editingName ? (
+                <form onSubmit={saveProfileName} className="flex min-w-0 flex-1 items-center gap-2">
+                  <input
+                    autoFocus
+                    aria-label="Profile name"
+                    maxLength={40}
+                    value={profileNameDraft}
+                    onChange={(event) => setProfileNameDraft(event.target.value)}
+                    className="min-w-0 flex-1 rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-slate-100"
+                  />
+                  <button type="submit" className="settings-icon-button" aria-label="Save profile name">
+                    <Check className="h-4 w-4" />
+                  </button>
+                </form>
+              ) : (
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-100">{user?.name || settings.profile.displayName}</p>
+                    {user?.email ? (
+                      <p className="truncate text-xs text-cyan-400">{user.email} · Cloud Account</p>
+                    ) : (
+                      <p className="text-xs text-slate-400">Guest Mode (Local Storage)</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="settings-icon-button"
+                    aria-label="Edit profile name"
+                    disabled={!settingsStore}
+                    onClick={() => {
+                      setProfileNameDraft(user?.name || settings.profile.displayName);
+                      setEditingName(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
-            <p className="text-sm text-slate-400">Profile accounts are not connected in this local-only version.</p>
+            {onNavigateSection && (
+              <nav aria-label="Profile menu" className="border-t border-slate-700/70 pt-4">
+                <h3 className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">Settings</h3>
+                <div className="flex flex-col">
+                  {PROFILE_MENU_LINKS.map(([id, label]) => (
+                    <React.Fragment key={id}>
+                      {id === 'terms' && (
+                        <>
+                          <div role="separator" className="my-2 border-t border-slate-700/70" />
+                          <h3 className="mb-2 mt-1 px-3 text-[10px] font-semibold uppercase tracking-[.18em] text-slate-500">Account &amp; information</h3>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onNavigateSection(id)}
+                        className={`rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-slate-800 ${id === 'deleteAccount' ? 'text-red-300 hover:text-red-200' : 'text-slate-300 hover:text-white'}`}
+                      >
+                        {label}
+                      </button>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </nav>
+            )}
           </section>
         ) : section === 'logout' ? (
-          <section className="space-y-3 rounded border border-slate-800 bg-slate-900/50 p-4">
-            <h3 className="font-medium">No account is signed in</h3>
-            <p className="text-sm text-slate-400">LifeStack is running locally and has no account or sign-in service, so there is nothing to log out of.</p>
+          <section className="space-y-4 rounded border border-slate-800 bg-slate-900/50 p-4">
+            <h3 className="font-semibold text-slate-100">Account Session</h3>
+            {isAuthenticated ? (
+              <div className="space-y-3">
+                <p className="text-sm text-slate-300">
+                  Signed in as <strong className="text-cyan-400">{user?.name || 'User'}</strong> ({user?.email})
+                </p>
+                <p className="text-xs text-slate-400">
+                  Logging out will end your session on this browser. Your cloud-synced records will remain safe.
+                </p>
+                {loggedOutNotice ? (
+                  <p className="text-xs text-emerald-400 font-medium">Successfully logged out.</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await logout();
+                      setLoggedOutNotice(true);
+                    }}
+                    className="flex items-center gap-2 rounded bg-red-600/80 hover:bg-red-500 px-3.5 py-1.5 text-xs font-medium text-white transition"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    <span>Log out of LifeStack</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-slate-400">
+                  You are currently using LifeStack in local guest mode. No cloud account is signed in on this device.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onClose) onClose();
+                    navigate(ROUTES.LOGIN);
+                  }}
+                  className="flex items-center gap-2 rounded bg-cyan-600 hover:bg-cyan-500 px-3.5 py-1.5 text-xs font-medium text-white transition"
+                >
+                  <User className="h-3.5 w-3.5" />
+                  <span>Sign in / Create Account</span>
+                </button>
+              </div>
+            )}
           </section>
         ) : section === 'deleteAccount' ? (
           <section className="space-y-3 rounded border border-red-900/70 bg-red-950/20 p-4">
             <h3 className="font-medium text-red-200">Account deletion is unavailable</h3>
-            <p className="text-sm text-slate-400">This local-only app does not have user accounts. You can manage locally stored records in Data management.</p>
+            <p className="text-sm text-slate-400">This local-only app does not have user accounts.</p>
           </section>
         ) : section === 'terms' ? (
           <section className="space-y-3 rounded border border-slate-800 bg-slate-900/50 p-4">
@@ -139,64 +266,70 @@ export default function SettingsPage({ dialogMode = false, dialogSection, onClos
           </section>
         ) : !settingsStore ? <p className="text-sm text-slate-400">Settings are read-only because browser storage could not be initialized.</p> : (
           <>
-            {section === 'general' && (
-              <section className="settings-options space-y-4">
-                <h2 className="font-semibold">General preferences</h2>
-                <div className="settings-option-list">
-                  <label className="settings-option-row text-sm">Default landing page
-                    <select className={FIELD_CLASS} value={settings.general.defaultLandingPage} onChange={(event) => updateCategory('general', { defaultLandingPage: event.target.value })}>
-                      <option value="/dashboard">Dashboard</option>
-                      <option value="/study">Study</option>
-                      <option value="/projects">Projects</option>
-                      <option value="/settings">Settings</option>
-                    </select>
-                  </label>
-                  <label className="settings-option-row text-sm">Date format
-                    <select className={FIELD_CLASS} value={settings.general.dateFormat} onChange={(event) => updateCategory('general', { dateFormat: event.target.value })}>
-                      <option value="locale">Use browser locale</option>
-                      <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                      <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                      <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                    </select>
-                  </label>
-                  <label className="settings-option-row text-sm">Time format
-                    <select className={FIELD_CLASS} value={settings.general.timeFormat} onChange={(event) => updateCategory('general', { timeFormat: event.target.value })}>
-                      <option value="12h">12-hour</option>
-                      <option value="24h">24-hour</option>
-                    </select>
-                  </label>
-                  <label className="settings-option-row text-sm">Application mode
-                    <select className={FIELD_CLASS} value={settings.applicationMode} onChange={(event) => updateApplicationMode(event.target.value)}>
-                      <option value="simple">Simple tracker</option>
-                      <option value="gamified">Gamified</option>
-                    </select>
-                  </label>
-                </div>
-                <p className="text-xs text-slate-400">Preferences save automatically and apply to supported module dates and the application landing route.</p>
-              </section>
-            )}
-
             {section === 'appearance' && (
               <section className="settings-options space-y-4">
-                <h2 className="font-semibold">Appearance preferences</h2>
+                <h2 className="font-semibold">Appearance</h2>
                 <div className="settings-option-list">
-                  <label className="settings-option-row text-sm">Theme
-                    <select className={FIELD_CLASS} value={settings.appearance.theme} onChange={(event) => updateCategory('appearance', { theme: event.target.value })}>
-                      <option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option>
-                    </select>
+                  <label className="settings-option-row settings-toggle-row text-sm" htmlFor="dark-mode-toggle">
+                    <span>
+                      <span className="block font-medium">Dark mode</span>
+                      <span className="mt-0.5 block text-xs text-slate-400">Use the dark LifeStack interface</span>
+                    </span>
+                    <input
+                      id="dark-mode-toggle"
+                      type="checkbox"
+                      role="switch"
+                      checked={settings.appearance.theme === 'dark'}
+                      onChange={(event) => updateCategory('appearance', { theme: event.target.checked ? 'dark' : 'light' })}
+                      className="settings-toggle"
+                    />
                   </label>
-                  <label className="settings-option-row text-sm">Accent colour
-                    <select className={FIELD_CLASS} value={settings.appearance.accentColor} onChange={(event) => updateCategory('appearance', { accentColor: event.target.value })}>
-                      <option value="blue">Blue</option><option value="red">Red</option>
-                    </select>
-                  </label>
-                  <label className="settings-option-row text-sm">Interface density
-                    <select className={FIELD_CLASS} value={settings.appearance.density} onChange={(event) => updateCategory('appearance', { density: event.target.value })}>
-                      <option value="comfortable">Comfortable</option><option value="compact">Compact</option>
-                    </select>
+                  <div className="settings-option-row settings-picker-row text-sm">
+                    <span>
+                      <span className="block font-medium">Accent colour</span>
+                      <span className="mt-0.5 block text-xs text-slate-400">Choose your interface highlight</span>
+                    </span>
+                    <div className="flex items-center gap-2" role="group" aria-label="Accent colour">
+                      {[
+                        ['blue', '#7893bd', 'Blue'],
+                        ['red', '#d06b79', 'Red'],
+                        ['violet', '#a78bfa', 'Violet'],
+                        ['green', '#4ade80', 'Green'],
+                      ].map(([value, color, label]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-label={`${label} accent`}
+                          aria-pressed={settings.appearance.accentColor === value}
+                          className="settings-color-swatch"
+                          style={{ '--swatch-color': color }}
+                          onClick={() => updateCategory('appearance', { accentColor: value })}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <label className="settings-option-row settings-size-row text-sm" htmlFor="display-size">
+                    <span>
+                      <span className="block font-medium">Display size</span>
+                      <span className="mt-0.5 block text-xs text-slate-400">Small, medium, or large</span>
+                    </span>
+                    <span className="settings-size-control">
+                      <input
+                        id="display-size"
+                        type="range"
+                        min="0"
+                        max="2"
+                        step="1"
+                        value={['small', 'medium', 'large'].indexOf(settings.appearance.density)}
+                        onChange={(event) => updateCategory('appearance', {
+                          density: ['small', 'medium', 'large'][Number(event.target.value)],
+                        })}
+                        aria-valuetext={settings.appearance.density}
+                      />
+                      <span aria-hidden="true"><span>Small</span><span>Medium</span><span>Large</span></span>
+                    </span>
                   </label>
                 </div>
-                <p className="text-xs text-slate-400">Selections are persisted and exposed as root appearance settings for the forthcoming visual redesign.</p>
               </section>
             )}
 
@@ -229,21 +362,29 @@ export default function SettingsPage({ dialogMode = false, dialogSection, onClos
               </section>
             )}
 
-            {section === 'privacy' && (
-              <section className="settings-options space-y-3">
-                <h2 className="font-semibold">Privacy and data handling</h2>
-                <p className="text-sm">LifeStack stores settings and study records in this browser profile using local storage. The current app does not send personal data to a LifeStack server or third-party analytics service.</p>
-                <p className="text-sm text-slate-400">Local storage is not encrypted. Anyone with access to this browser profile may be able to access its records. Exported backup files contain your data and should be stored securely.</p>
-                <p className="text-sm text-slate-400">Clearing browser site data removes application records unless you first export or create a manual backup.</p>
-              </section>
-            )}
-
-            {section === 'data' && <SettingsDataManagement settings={settings} settingsStore={settingsStore} settingsError={storageError} report={report} />}
             {section === 'system' && <SystemInformation version={packageInfo.version} />}
           </>
         )}
       </div>
     </div>
+  );
+}
+
+function SettingsMenu({ sections, onNavigate }) {
+  return (
+    <nav aria-label="Settings menu" className="settings-menu-grid">
+      {sections.map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onNavigate(id)}
+          className="settings-menu-card"
+        >
+          <span className="settings-menu-card-title">{label}</span>
+          <span className="settings-menu-card-action" aria-hidden="true">Open</span>
+        </button>
+      ))}
+    </nav>
   );
 }
 
@@ -297,9 +438,19 @@ function NotificationSettings({ settings, settingsStore, updateCategory, report 
   return (
     <section className="settings-options space-y-4">
       <h2 className="font-semibold">Notifications and reminders</h2>
-      <label className="settings-option-row flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={notificationOptions.enabled} onChange={(event) => updateCategory('notifications', { enabled: event.target.checked })} />
-        Enable notifications
+      <label className="settings-option-row settings-toggle-row text-sm" htmlFor="notifications-toggle">
+        <span>
+          <span className="block font-medium">Notifications</span>
+          <span className="mt-0.5 block text-xs text-slate-400">Allow LifeStack to send reminders</span>
+        </span>
+        <input
+          id="notifications-toggle"
+          type="checkbox"
+          role="switch"
+          checked={notificationOptions.enabled}
+          onChange={(event) => updateCategory('notifications', { enabled: event.target.checked })}
+          className="settings-toggle"
+        />
       </label>
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <span>Browser permission: {permission}</span>
@@ -307,7 +458,7 @@ function NotificationSettings({ settings, settingsStore, updateCategory, report 
       </div>
 
       {notificationOptions.enabled && (
-        <div className="space-y-4 border-t border-slate-700 pt-4">
+        <div className="space-y-4 pt-4">
           <label className="settings-option-row flex items-center gap-2 text-sm">
             <input type="checkbox" checked={notificationOptions.soundEnabled} onChange={(event) => updateCategory('notifications', { soundEnabled: event.target.checked })} />
             Allow browser notification sounds
@@ -333,7 +484,7 @@ function NotificationSettings({ settings, settingsStore, updateCategory, report 
         </div>
       )}
 
-      <div className="border-t border-slate-700 pt-4">
+      <div className="pt-4">
         <div className="flex items-center justify-between gap-3">
           <h3 className="font-medium">Notification history ({notificationOptions.history.length})</h3>
           {notificationOptions.history.length > 0 && <button type="button" className="text-sm underline" onClick={() => {

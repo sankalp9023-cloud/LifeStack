@@ -12,9 +12,7 @@ export function SettingsProvider({ children }) {
     root.dataset.accent = value.settings.appearance.accentColor;
     root.dataset.density = value.settings.appearance.density;
     root.dataset.appMode = value.settings.applicationMode;
-    root.style.colorScheme = value.settings.appearance.theme === 'system'
-      ? 'light dark'
-      : value.settings.appearance.theme;
+    root.style.colorScheme = value.settings.appearance.theme;
   }, [value.settings]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

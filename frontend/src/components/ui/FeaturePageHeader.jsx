@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function FeaturePageHeader({ title, description, actionLabel, onAction }) {
   return (
-    <header className="hud-page-header flex flex-wrap items-center justify-between gap-3 border-b border-slate-700 pb-3">
+    <header className="hud-page-header flex flex-wrap items-center justify-between gap-3 pb-3">
       <div>
         <h1 className="text-2xl font-semibold text-slate-100">{title}</h1>
         {description && <p className="mt-1 text-sm text-slate-400">{description}</p>}

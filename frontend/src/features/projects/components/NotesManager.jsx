@@ -56,7 +56,7 @@ export default function NotesManager({ project, notes = [], repository, run }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+      <div className="flex items-center justify-between pb-2">
         <h3 className="text-lg font-semibold text-slate-100">
           Project Notes ({projectNotes.length})
         </h3>
@@ -154,7 +154,7 @@ export default function NotesManager({ project, notes = [], repository, run }) {
                   <p className="mt-2 text-xs text-slate-500 italic">No content</p>
                 )}
               </div>
-              <div className="mt-3 pt-2 border-t border-slate-800/80 text-[10px] text-slate-500">
+              <div className="mt-3 pt-2 text-[10px] text-slate-500">
                 Updated: {formatSettingsDateTime(note.updatedAt || note.createdAt, settings)}
               </div>
             </div>

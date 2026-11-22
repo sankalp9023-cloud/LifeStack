@@ -1,14 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { getRegisteredModuleSettings } from '../data/settingsSchema';
-
-const AVAILABLE_MODULES = [
-  { name: 'Dashboard', route: '/dashboard' },
-  { name: 'Study', route: '/study' },
-  { name: 'Projects', route: '/projects' },
-  { name: 'Tasks', route: '/projects (task engine)' },
-  { name: 'Settings', route: '/settings' },
-];
-
 export default function SystemInformation({ version }) {
   const [storageEstimate, setStorageEstimate] = useState('Checking browser storage…');
   useEffect(() => {
@@ -44,18 +34,6 @@ export default function SystemInformation({ version }) {
         <Info label="Browser storage estimate" value={storageEstimate} />
         <Info label="Persistent data" value="Browser local storage" />
       </dl>
-      <div>
-        <h3 className="mb-2 font-medium">Available features</h3>
-        <ul className="list-inside list-disc text-sm text-slate-300">
-          {AVAILABLE_MODULES.map((module) => <li key={module.route}>{module.name} ({module.route})</li>)}
-        </ul>
-      </div>
-      <div>
-        <h3 className="mb-2 font-medium">Registered module preferences</h3>
-        <ul className="list-inside list-disc text-sm text-slate-300">
-          {getRegisteredModuleSettings().map((module) => <li key={module.id}>{module.id}</li>)}
-        </ul>
-      </div>
     </section>
   );
 }

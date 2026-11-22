@@ -1,0 +1,11 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Models will be mapped to the reviewed SQL migration before domain queries
+// are introduced. No incomplete model set should be used to generate migrations.

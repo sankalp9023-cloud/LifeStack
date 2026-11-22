@@ -31,8 +31,15 @@ test('settings persist validated preferences and safely merge missing fields fro
   assert.equal(restored.getSnapshot().appearance.accentColor, 'blue');
   restored.updateCategory('appearance', { accentColor: 'red' });
   assert.equal(restored.getSnapshot().appearance.accentColor, 'red');
+  restored.updateCategory('appearance', { accentColor: 'violet', density: 'large', theme: 'light' });
+  assert.equal(restored.getSnapshot().appearance.accentColor, 'violet');
+  assert.equal(restored.getSnapshot().appearance.density, 'large');
+  assert.equal(restored.getSnapshot().appearance.theme, 'light');
+  restored.updateCategory('profile', { displayName: 'Alex' });
+  assert.equal(createSettingsStore(storage).getSnapshot().profile.displayName, 'Alex');
+  assert.throws(() => restored.updateCategory('profile', { displayName: ' ' }), /Profile name/);
   assert.throws(() => restored.updateCategory('appearance', { theme: 'unknown' }), /unsupported value/);
-  assert.equal(restored.getSnapshot().appearance.theme, 'system');
+  assert.equal(restored.getSnapshot().appearance.theme, 'light');
 
   storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({
     version: 0,
@@ -40,8 +47,21 @@ test('settings persist validated preferences and safely merge missing fields fro
   }));
   const migrated = createSettingsStore(storage);
   assert.equal(migrated.getSnapshot().general.dateFormat, 'YYYY-MM-DD');
-  assert.equal(migrated.getSnapshot().appearance.theme, 'system');
+  assert.equal(migrated.getSnapshot().appearance.theme, 'dark');
   assert.equal(migrated.getSnapshot().appearance.accentColor, 'blue');
+});
+
+test('legacy appearance density values migrate to the supported display sizes', () => {
+  const storage = createMemoryStorage();
+  storage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({
+    version: 1,
+    settings: {
+      appearance: { density: 'comfortable', theme: 'system' },
+    },
+  }));
+  const settings = createSettingsStore(storage).getSnapshot();
+  assert.equal(settings.appearance.density, 'medium');
+  assert.equal(settings.appearance.theme, 'dark');
 });
 
 test('backup restore covers settings and Study data; invalid relationships cannot be restored', () => {

@@ -4,7 +4,6 @@ import ProjectsDashboard from '@/features/projects/components/ProjectsDashboard'
 import ProjectList from '@/features/projects/components/ProjectList';
 import ProjectDetail from '@/features/projects/components/ProjectDetail';
 import ProjectForm from '@/features/projects/components/ProjectForm';
-import FeaturePageHeader from '@/components/ui/FeaturePageHeader';
 import Modal from '@/components/ui/Modal';
 import '@/features/projects/projects.css';
 
@@ -71,16 +70,6 @@ export default function ProjectsPage() {
   return (
     <div className="projects-page select-text min-h-0 w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
       <div className="mx-auto w-full max-w-none space-y-5">
-        <FeaturePageHeader
-          title="Projects"
-          description="Manage larger objectives, ongoing initiatives, software development, and milestones."
-          actionLabel="+ New Project"
-          onAction={() => {
-            setSelectedProjectId(null);
-            setIsCreatingProject(true);
-          }}
-        />
-
         {/* Alerts & Notifications */}
         {(storageError || error) && (
           <div role="alert" className="rounded border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
@@ -115,7 +104,7 @@ export default function ProjectsPage() {
           />
         ) : (
           <div className="space-y-6">
-            <section className="workspace-section-panel hud-surface rounded-2xl border border-slate-700/70 p-4 sm:p-5">
+            <section className="workspace-section-panel">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold">Project overview</h2>
@@ -132,16 +121,15 @@ export default function ProjectsPage() {
               />
             </section>
 
-            <div className="grid min-w-0 gap-6 2xl:grid-cols-2">
-              <section id="active-projects-panel" className="workspace-section-panel hud-surface min-w-0 scroll-mt-6 rounded-2xl border border-slate-700/70 p-4 sm:p-5">
+            <section id="active-projects-panel" className="workspace-section-panel min-w-0 scroll-mt-6">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-lg font-semibold">All projects</h2>
-                    <p className="text-sm text-slate-400">{projects.filter((project) => project.status !== 'archived').length} active or planned</p>
+                    <p className="text-sm text-slate-400">{projects.length} total · use the status filter to browse archived projects</p>
                   </div>
                 </div>
                 <ProjectList
-                  projects={projects.filter((p) => p.status !== 'archived')}
+                  projects={projects}
                   milestones={milestones}
                   tasks={tasks}
                   onSelectProject={handleSelectProject}
@@ -150,26 +138,7 @@ export default function ProjectsPage() {
                   taskRepository={taskRepository}
                   run={run}
                 />
-              </section>
-
-              <section id="archived-projects-panel" className="workspace-section-panel hud-surface min-w-0 scroll-mt-6 rounded-2xl border border-slate-700/70 p-4 sm:p-5">
-                <div className="mb-4">
-                  <h2 className="text-lg font-semibold">Archived projects</h2>
-                  <p className="text-sm text-slate-400">{projects.filter((project) => project.status === 'archived').length} archived</p>
-                </div>
-                <ProjectList
-                  projects={projects.filter((p) => p.status === 'archived')}
-                  milestones={milestones}
-                  tasks={tasks}
-                  onSelectProject={handleSelectProject}
-                  onNewProject={() => setIsCreatingProject(true)}
-                  repository={repository}
-                  taskRepository={taskRepository}
-                  run={run}
-                  initialStatusFilter="archived"
-                />
-              </section>
-            </div>
+            </section>
           </div>
         )}
         <Modal open={isCreatingProject} title="Create project" onClose={() => setIsCreatingProject(false)}>

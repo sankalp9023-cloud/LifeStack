@@ -1,0 +1,2752 @@
+openapi: 3.1.0
+info:
+  title: LifeStack API
+  version: 1.0.0
+  description: >-
+    Versioned REST contract aligned to LifeStack's current Study, Projects,
+    Tasks, Settings, and Dashboard frontend data shapes. This contract does not
+    select a hosting platform. Account authentication uses opaque
+    sessions in an HTTP-only cookie; Tasks routes and core Projects/milestone
+    operations are implemented, with other private feature APIs still pending.
+    Responses use a {data} envelope; errors use {error:{code,message,fields,requestId}}.
+    List endpoints use opaque cursors, default limit 25 and maximum limit 100,
+    with stable ordering by updatedAt,id or createdAt,id. Expected error statuses
+    are 400 malformed input, 404 missing resource, 409 conflict, 422 validation,
+    and 500 unexpected server error. Date-only fields use YYYY-MM-DD. Optional
+    IDs and dates retain the frontend's empty-string convention; timestamps and
+    nullable result/completion values retain their existing types.
+servers:
+  - url: /api/v1
+tags:
+  - name: Health
+  - name: Auth
+  - name: Dashboard
+  - name: Study
+  - name: Projects
+  - name: Tasks
+  - name: Settings
+  - name: Backups
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Check whether the API process is live
+      responses:
+        '200':
+          description: API process is running.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [status]
+                    properties:
+                      status: { type: string, const: ok }
+
+  /ready:
+    get:
+      tags: [Health]
+      summary: Check database connectivity and supported PostgreSQL version
+      responses:
+        '200':
+          description: Database is reachable and supported.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [status]
+                    properties:
+                      status: { type: string, const: ready }
+        '503':
+          description: Database is unavailable or below the supported version.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /auth/signup:
+    post:
+      tags: [Auth]
+      summary: Create an email and password account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthSignup' }
+      responses:
+        '201':
+          description: Account created and session cookie set.
+          headers:
+            Set-Cookie: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '409': { $ref: '#/components/responses/Error' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Start an email and password session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthLogin' }
+      responses:
+        '200':
+          description: User returned and session cookie set.
+          headers:
+            Set-Cookie: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '401': { $ref: '#/components/responses/Error' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /auth/google:
+    post:
+      tags: [Auth]
+      summary: Verify a Google identity token and start a session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoogleAuthRequest' }
+      responses:
+        '200':
+          description: User returned and session cookie set.
+          headers:
+            Set-Cookie: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '401': { $ref: '#/components/responses/Error' }
+        '503': { $ref: '#/components/responses/Error' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Read the current authenticated user
+      security: [{ lifeStackSession: [] }]
+      responses:
+        '200':
+          description: Current user profile.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthResponse' }
+        '401': { $ref: '#/components/responses/Error' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current session
+      security: [{ lifeStackSession: [] }]
+      responses:
+        '200':
+          description: Session revoked and cookie cleared.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [signedOut]
+                    properties:
+                      signedOut: { type: boolean, const: true }
+        default: { $ref: '#/components/responses/Error' }
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Get cross-module dashboard aggregates
+      responses:
+        '200':
+          description: Dashboard cards and recent task activity.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DashboardSummary'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/workspace:
+    get:
+      tags: [Study]
+      summary: Get Study collections in the current frontend snapshot shape
+      responses:
+        '200':
+          description: Complete Study workspace snapshot.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StudyWorkspace'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/overview:
+    get:
+      tags: [Study]
+      summary: Get Study dashboard metrics
+      responses:
+        '200':
+          description: Subject, topic, revision, test, and recent activity aggregates.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StudyOverview'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/subjects:
+    get:
+      tags: [Study]
+      summary: List subjects
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Search'
+      responses:
+        '200':
+          $ref: '#/components/responses/SubjectList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Study]
+      summary: Create a subject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectInput'
+      responses:
+        '201':
+          description: Subject created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subject'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/subjects/{subjectId}:
+    parameters:
+      - $ref: '#/components/parameters/SubjectId'
+    get:
+      tags: [Study]
+      summary: Get a subject
+      responses:
+        '200':
+          description: Subject record.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subject'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Study]
+      summary: Update subject fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubjectInput'
+      responses:
+        '200':
+          description: Updated subject.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Subject'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Study]
+      summary: Delete subject and cascade its owned learning tree
+      description: >-
+        Deletes chapters, topics, activities, revisions, notes, practice sessions,
+        and assessments. Study sessions are retained and detached from the subject
+        and topic. Apply the operation atomically.
+      responses:
+        '204':
+          description: Subject deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/subjects/{subjectId}/chapters:
+    parameters:
+      - $ref: '#/components/parameters/SubjectId'
+    get:
+      tags: [Study]
+      summary: List a subject's chapters
+      responses:
+        '200':
+          $ref: '#/components/responses/ChapterList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Study]
+      summary: Add a chapter to a subject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChapterInput'
+      responses:
+        '201':
+          description: Chapter created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Chapter'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/chapters/{chapterId}:
+    parameters:
+      - $ref: '#/components/parameters/ChapterId'
+    patch:
+      tags: [Study]
+      summary: Update a chapter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChapterInput'
+      responses:
+        '200':
+          description: Updated chapter.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Chapter'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Study]
+      summary: Delete a chapter and its topics
+      description: >-
+        Deletes topics, their activities and revisions. Notes and sessions are
+        retained with chapter/topic references cleared; assessments retain their
+        records with deleted topic IDs removed. Apply atomically.
+      responses:
+        '204':
+          description: Chapter deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/chapters/{chapterId}/topics:
+    parameters:
+      - $ref: '#/components/parameters/ChapterId'
+    get:
+      tags: [Study]
+      summary: List a chapter's topics
+      responses:
+        '200':
+          $ref: '#/components/responses/TopicList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Study]
+      summary: Add a topic to a chapter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopicInput'
+      responses:
+        '201':
+          description: Topic created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Topic'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/topics/{topicId}:
+    parameters:
+      - $ref: '#/components/parameters/TopicId'
+    patch:
+      tags: [Study]
+      summary: Update a topic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopicInput'
+      responses:
+        '200':
+          description: Updated topic.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Topic'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Study]
+      summary: Delete a topic and its activities and revisions
+      description: Notes and sessions are retained with the topic reference cleared.
+      responses:
+        '204':
+          description: Topic deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/topics/{topicId}/activities:
+    parameters:
+      - $ref: '#/components/parameters/TopicId'
+    get:
+      tags: [Study]
+      summary: List a topic's learning activities
+      responses:
+        '200':
+          $ref: '#/components/responses/ActivityList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Study]
+      summary: Add a learning activity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LearningActivityInput'
+      responses:
+        '201':
+          description: Activity created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LearningActivity'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/activities/{activityId}:
+    parameters:
+      - name: activityId
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Study]
+      summary: Update activity text or completion state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LearningActivityPatch'
+      responses:
+        '200':
+          description: Updated activity.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LearningActivity'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Study]
+      summary: Delete a learning activity
+      responses:
+        '204':
+          description: Activity deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/notes:
+    get:
+      tags: [Study]
+      summary: List study notes
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: subjectId
+          in: query
+          schema: { type: string }
+        - name: chapterId
+          in: query
+          schema: { type: string }
+        - name: topicId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          $ref: '#/components/responses/StudyNoteList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Study]
+      summary: Create a study note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudyNoteInput'
+      responses:
+        '201':
+          description: Note created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StudyNote'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/notes/{noteId}:
+    parameters:
+      - name: noteId
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Study]
+      summary: Update a study note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudyNotePatch'
+      responses:
+        '200':
+          description: Updated note.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StudyNote'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Study]
+      summary: Delete a study note
+      responses:
+        '204':
+          description: Note deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/topics/{topicId}/revisions:
+    parameters:
+      - $ref: '#/components/parameters/TopicId'
+    get:
+      tags: [Study]
+      summary: List revisions for a topic
+      responses:
+        '200':
+          $ref: '#/components/responses/RevisionList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Study]
+      summary: Schedule a revision
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevisionInput'
+      responses:
+        '201':
+          description: Revision scheduled.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Revision'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/revisions/{revisionId}:
+    parameters:
+      - name: revisionId
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Study]
+      summary: Update revision date, notes, or completion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevisionPatch'
+      responses:
+        '200':
+          description: Updated revision.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Revision'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Study]
+      summary: Delete a revision
+      responses:
+        '204':
+          description: Revision deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/practice-sessions:
+    get:
+      tags: [Study]
+      summary: List practice sessions
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: subjectId
+          in: query
+          schema: { type: string }
+        - name: topicId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          $ref: '#/components/responses/PracticeSessionList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Study]
+      summary: Record a practice session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PracticeSessionInput'
+      responses:
+        '201':
+          description: Practice session created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PracticeSession'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/practice-sessions/{sessionId}:
+    delete:
+      tags: [Study]
+      summary: Delete a practice session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Practice session deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/assessments:
+    get:
+      tags: [Study]
+      summary: List assessments
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: subjectId
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          $ref: '#/components/responses/AssessmentList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Study]
+      summary: Create an assessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssessmentInput'
+      responses:
+        '201':
+          description: Assessment created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Assessment'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/assessments/{assessmentId}:
+    parameters:
+      - name: assessmentId
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Study]
+      summary: Update an assessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssessmentPatch'
+      responses:
+        '200':
+          description: Updated assessment.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Assessment'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Study]
+      summary: Delete an assessment
+      responses:
+        '204':
+          description: Assessment deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/sessions:
+    get:
+      tags: [Study]
+      summary: List study sessions
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: subjectId
+          in: query
+          schema: { type: string }
+        - name: topicId
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          $ref: '#/components/responses/StudySessionList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Study]
+      summary: Record a study session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudySessionInput'
+      responses:
+        '201':
+          description: Study session created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StudySession'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /study/sessions/{sessionId}:
+    delete:
+      tags: [Study]
+      summary: Delete a study session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Study session deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/workspace:
+    get:
+      tags: [Projects]
+      summary: Get project collections in the current frontend snapshot shape
+      responses:
+        '200':
+          description: Project workspace snapshot.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProjectWorkspace'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/overview:
+    get:
+      tags: [Projects]
+      summary: Get project dashboard metrics
+      responses:
+        '200':
+          description: Project counts, deadlines, overdue items, and recently updated projects.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProjectOverview'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects:
+    get:
+      tags: [Projects]
+      summary: List and filter projects
+      security: [{ lifeStackSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Search'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [not_started, active, on_hold, completed, archived]
+        - name: category
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Projects]
+      summary: Create a project
+      security: [{ lifeStackSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectInput'
+      responses:
+        '201':
+          description: Project created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/{projectId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      summary: Get a project
+      security: [{ lifeStackSession: [] }]
+      responses:
+        '200':
+          description: Project record.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Projects]
+      summary: Update project fields, including status
+      security: [{ lifeStackSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectPatch'
+      responses:
+        '200':
+          description: Updated project.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Projects]
+      summary: Delete a project and its owned records
+      security: [{ lifeStackSession: [] }]
+      description: >-
+        Deletes milestones, notes, resources, important dates, and project
+        activities. Tasks are preserved with projectId and milestoneId cleared.
+        Apply the operation atomically.
+      responses:
+        '204':
+          description: Project and owned records deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/{projectId}/archive:
+    post:
+      tags: [Projects]
+      summary: Archive a project
+      security: [{ lifeStackSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Archived project.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/{projectId}/restore:
+    post:
+      tags: [Projects]
+      summary: Restore an archived project
+      security: [{ lifeStackSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [not_started, active, on_hold, completed]
+                  default: active
+      responses:
+        '200':
+          description: Restored project.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/{projectId}/milestones:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      summary: List project milestones
+      security: [{ lifeStackSession: [] }]
+      responses:
+        '200':
+          $ref: '#/components/responses/MilestoneList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Projects]
+      summary: Create a milestone
+      security: [{ lifeStackSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestoneInput'
+      responses:
+        '201':
+          description: Milestone created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Milestone'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/milestones/{milestoneId}:
+    parameters:
+      - name: milestoneId
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Projects]
+      summary: Update milestone or completion state
+      security: [{ lifeStackSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MilestonePatch'
+      responses:
+        '200':
+          description: Updated milestone.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Milestone'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Projects]
+      summary: Delete milestone and detach its tasks from the milestone
+      security: [{ lifeStackSession: [] }]
+      responses:
+        '204':
+          description: Milestone deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/{projectId}/notes:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      summary: List project notes
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectNoteList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Projects]
+      summary: Create a project note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectNoteInput'
+      responses:
+        '201':
+          description: Note created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProjectNote'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/notes/{noteId}:
+    parameters:
+      - name: noteId
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Projects]
+      summary: Update a project note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectNotePatch'
+      responses:
+        '200':
+          description: Updated note.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProjectNote'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Projects]
+      summary: Delete a project note
+      responses:
+        '204':
+          description: Note deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/{projectId}/resources:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      summary: List project resources
+      responses:
+        '200':
+          $ref: '#/components/responses/ResourceList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Projects]
+      summary: Add a project resource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceInput'
+      responses:
+        '201':
+          description: Resource created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProjectResource'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/resources/{resourceId}:
+    parameters:
+      - name: resourceId
+        in: path
+        required: true
+        schema: { type: string }
+    patch:
+      tags: [Projects]
+      summary: Update a project resource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceInput'
+      responses:
+        '200':
+          description: Updated resource.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProjectResource'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Projects]
+      summary: Delete a project resource
+      responses:
+        '204':
+          description: Resource deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/{projectId}/important-dates:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      summary: List important dates
+      responses:
+        '200':
+          $ref: '#/components/responses/ImportantDateList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Projects]
+      summary: Add an important date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportantDateInput'
+      responses:
+        '201':
+          description: Important date created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ImportantDate'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/important-dates/{dateId}:
+    delete:
+      tags: [Projects]
+      summary: Delete an important date
+      parameters:
+        - name: dateId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Important date deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /projects/{projectId}/activities:
+    get:
+      tags: [Projects]
+      summary: List project activity log
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          $ref: '#/components/responses/ActivityLogList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Projects]
+      summary: Record a project activity entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityLogInput'
+      responses:
+        '201':
+          description: Activity recorded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ActivityLogEntry'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /tasks:
+    get:
+      tags: [Tasks]
+      summary: Search and filter global tasks
+      security: [{ lifeStackSession: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Search'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [todo, in_progress, completed]
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: projectId
+          in: query
+          schema: { type: string }
+        - name: milestoneId
+          in: query
+          schema: { type: string }
+        - name: dueDateFrom
+          in: query
+          schema: { type: string, format: date }
+        - name: dueDateTo
+          in: query
+          schema: { type: string, format: date }
+        - name: unassigned
+          in: query
+          description: When true, only tasks without a project are returned.
+          schema: { type: boolean }
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Tasks]
+      summary: Create a task
+      security: [{ lifeStackSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Task created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /tasks/overview:
+    get:
+      tags: [Tasks]
+      summary: Get task dashboard metrics
+      security: [{ lifeStackSession: [] }]
+      responses:
+        '200':
+          description: Counts and chart-ready breakdowns used by the Tasks page.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/TaskOverview'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /tasks/{taskId}:
+    parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Tasks]
+      summary: Get a task
+      security: [{ lifeStackSession: [] }]
+      responses:
+        '200':
+          description: Task record.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        default:
+          $ref: '#/components/responses/Error'
+    patch:
+      tags: [Tasks]
+      summary: Update task fields, completion, or project assignment
+      security: [{ lifeStackSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskPatch'
+      responses:
+        '200':
+          description: Updated task.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Task'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Tasks]
+      summary: Delete a task
+      security: [{ lifeStackSession: [] }]
+      responses:
+        '204':
+          description: Task deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /settings:
+    get:
+      tags: [Settings]
+      summary: Get current settings
+      responses:
+        '200':
+          description: Settings values matching the current settings store.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Settings'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /settings/{category}:
+    patch:
+      tags: [Settings]
+      summary: Patch a settings category
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [general, appearance, notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Partial category fields; omitted fields retain their values.
+      responses:
+        '200':
+          description: Updated settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Settings'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /settings/application:
+    patch:
+      tags: [Settings]
+      summary: Update application mode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [applicationMode]
+              properties:
+                applicationMode:
+                  type: string
+                  enum: [simple, gamified]
+      responses:
+        '200':
+          description: Updated settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Settings'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /settings/modules/{moduleId}:
+    patch:
+      tags: [Settings]
+      summary: Patch validated preferences registered by a module
+      parameters:
+        - name: moduleId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-z][a-z0-9-]*$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated settings.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Settings'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /settings/notifications/history:
+    post:
+      tags: [Settings]
+      summary: Record a delivered reminder notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationHistoryEntry'
+      responses:
+        '201':
+          description: Notification history entry recorded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/NotificationHistoryEntry'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      tags: [Settings]
+      summary: Clear notification history
+      responses:
+        '204':
+          description: Notification history cleared.
+        default:
+          $ref: '#/components/responses/Error'
+
+  /backups/export:
+    get:
+      tags: [Backups]
+      summary: Export settings and module data in the current backup format
+      responses:
+        '200':
+          description: LifeStack backup document.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Backup'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /backups:
+    get:
+      tags: [Backups]
+      summary: List manual backups
+      responses:
+        '200':
+          description: Saved manual backups, newest first (maximum five).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BackupRecord'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      tags: [Backups]
+      summary: Save a manual backup of current app data
+      responses:
+        '201':
+          description: Manual backup saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BackupRecord'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /backups/import:
+    post:
+      tags: [Backups]
+      summary: Validate and atomically import a backup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Backup'
+      responses:
+        '200':
+          description: Import completed; data replaced atomically.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [imported, modules]
+                    properties:
+                      imported: { type: boolean, const: true }
+                      modules:
+                        type: array
+                        items: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+
+  /backups/{backupId}/restore:
+    post:
+      tags: [Backups]
+      summary: Restore a saved manual backup atomically
+      parameters:
+        - name: backupId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Backup restored.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [restored, modules]
+                    properties:
+                      restored: { type: boolean, const: true }
+                      modules:
+                        type: array
+                        items: { type: string }
+        default:
+          $ref: '#/components/responses/Error'
+
+  /backups/{backupId}:
+    delete:
+      tags: [Backups]
+      summary: Delete a saved manual backup
+      parameters:
+        - name: backupId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Backup deleted.
+        default:
+          $ref: '#/components/responses/Error'
+
+components:
+  securitySchemes:
+    lifeStackSession:
+      type: apiKey
+      in: cookie
+      name: lifestack_session
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Page size; default 25, maximum 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    Cursor:
+      name: cursor
+      in: query
+      description: Opaque cursor returned by the prior page.
+      schema: { type: string }
+    Search:
+      name: q
+      in: query
+      description: Case-insensitive search over the resource's searchable text fields.
+      schema: { type: string }
+    SubjectId:
+      name: subjectId
+      in: path
+      required: true
+      schema: { type: string }
+    ChapterId:
+      name: chapterId
+      in: path
+      required: true
+      schema: { type: string }
+    TopicId:
+      name: topicId
+      in: path
+      required: true
+      schema: { type: string }
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string }
+  responses:
+    Error:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    SubjectList:
+      description: Subject page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SubjectPage'
+    ChapterList:
+      description: Chapter collection.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ChapterPage'
+    TopicList:
+      description: Topic collection.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TopicPage'
+    ActivityList:
+      description: Learning activity collection.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LearningActivityPage'
+    StudyNoteList:
+      description: Study note page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StudyNotePage'
+    RevisionList:
+      description: Revision collection.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RevisionPage'
+    PracticeSessionList:
+      description: Practice session page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PracticeSessionPage'
+    AssessmentList:
+      description: Assessment page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AssessmentPage'
+    StudySessionList:
+      description: Study session page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StudySessionPage'
+    ProjectList:
+      description: Project page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectPage'
+    MilestoneList:
+      description: Milestone page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MilestonePage'
+    ProjectNoteList:
+      description: Project note page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectNotePage'
+    ResourceList:
+      description: Project resource page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResourcePage'
+    ImportantDateList:
+      description: Important date page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ImportantDatePage'
+    ActivityLogList:
+      description: Project activity log page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActivityLogPage'
+    TaskList:
+      description: Task page.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TaskPage'
+  schemas:
+    AuthSignup:
+      type: object
+      required: [name, email, password]
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 8, maxLength: 128 }
+    AuthLogin:
+      type: object
+      required: [email, password]
+      additionalProperties: false
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 1, maxLength: 128 }
+    GoogleAuthRequest:
+      type: object
+      required: [idToken]
+      additionalProperties: false
+      properties:
+        idToken: { type: string, minLength: 1, maxLength: 8192 }
+    AuthUser:
+      type: object
+      required: [id, email, name, avatarUrl]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        name: { type: string }
+        avatarUrl: { type: [string, 'null'], format: uri }
+    AuthResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [user]
+          properties:
+            user: { $ref: '#/components/schemas/AuthUser' }
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, requestId]
+          properties:
+            code:
+              type: string
+              examples: [VALIDATION_ERROR]
+            message: { type: string }
+            fields:
+              type: object
+              additionalProperties:
+                type: string
+            requestId: { type: string }
+    PageInfo:
+      type: object
+      required: [limit, nextCursor, hasMore]
+      properties:
+        limit: { type: integer, minimum: 1, maximum: 100 }
+        nextCursor: { type: [string, 'null'] }
+        hasMore: { type: boolean }
+    Page:
+      type: object
+      required: [data, page]
+      properties:
+        data: { type: array, items: {} }
+        page: { $ref: '#/components/schemas/PageInfo' }
+    Subject:
+      type: object
+      required: [id, name, goal, description, createdAt]
+      properties:
+        id: { type: string }
+        name: { type: string, minLength: 1 }
+        goal: { type: string }
+        description: { type: string }
+        createdAt: { type: string, format: date-time }
+    SubjectInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        goal: { type: string }
+        description: { type: string }
+    Chapter:
+      type: object
+      required: [id, subjectId, name, description, createdAt]
+      properties:
+        id: { type: string }
+        subjectId: { type: string }
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        createdAt: { type: string, format: date-time }
+    ChapterInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+    Topic:
+      type: object
+      required: [id, chapterId, name, requirements, createdAt]
+      properties:
+        id: { type: string }
+        chapterId: { type: string }
+        name: { type: string, minLength: 1 }
+        requirements:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: string, enum: [lecture, reading, practice] }
+        createdAt: { type: string, format: date-time }
+    TopicInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        requirements:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: { type: string, enum: [lecture, reading, practice] }
+    LearningActivity:
+      type: object
+      required: [id, topicId, type, title, details, completed, createdAt, completedAt]
+      properties:
+        id: { type: string }
+        topicId: { type: string }
+        type: { type: string, enum: [lecture, reading, practice] }
+        title: { type: string, minLength: 1 }
+        details: { type: string }
+        completed: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+    LearningActivityInput:
+      type: object
+      required: [type, title]
+      properties:
+        type: { type: string, enum: [lecture, reading, practice] }
+        title: { type: string, minLength: 1 }
+        details: { type: string }
+    LearningActivityPatch:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        details: { type: string }
+        completed: { type: boolean }
+    StudyNote:
+      type: object
+      required: [id, subjectId, chapterId, topicId, title, content, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        subjectId: { type: string }
+        chapterId: { type: string, description: Empty string when not associated with a chapter. }
+        topicId: { type: string, description: Empty string when not associated with a topic. }
+        title: { type: string, minLength: 1 }
+        content: { type: string, minLength: 1 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    StudyNoteInput:
+      type: object
+      required: [subjectId, title, content]
+      properties:
+        subjectId: { type: string }
+        chapterId: { type: string, default: '' }
+        topicId: { type: string, default: '' }
+        title: { type: string, minLength: 1 }
+        content: { type: string, minLength: 1 }
+    StudyNotePatch:
+      type: object
+      properties:
+        subjectId: { type: string }
+        chapterId: { type: string }
+        topicId: { type: string }
+        title: { type: string, minLength: 1 }
+        content: { type: string, minLength: 1 }
+    Revision:
+      type: object
+      required: [id, topicId, status, dueDate, notes, createdAt, completedAt]
+      properties:
+        id: { type: string }
+        topicId: { type: string }
+        status: { type: string, enum: [pending, completed] }
+        dueDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          description: Empty string when unscheduled.
+        notes: { type: string }
+        createdAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+    RevisionInput:
+      type: object
+      properties:
+        dueDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          default: ''
+        notes: { type: string }
+    RevisionPatch:
+      type: object
+      properties:
+        completed: { type: boolean }
+        dueDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+        notes: { type: string }
+    PracticeSession:
+      type: object
+      required: [id, subjectId, topicId, questionsAttempted, questionsCompleted, questionsCorrect, durationMinutes, notes, date, createdAt]
+      properties:
+        id: { type: string }
+        subjectId: { type: string }
+        topicId: { type: string }
+        questionsAttempted: { type: integer, minimum: 0 }
+        questionsCompleted: { type: integer, minimum: 0 }
+        questionsCorrect: { type: [integer, 'null'], minimum: 0 }
+        durationMinutes: { type: number, minimum: 0 }
+        notes: { type: string }
+        date: { type: string, format: date }
+        createdAt: { type: string, format: date-time }
+    PracticeSessionInput:
+      type: object
+      required: [subjectId, questionsAttempted, questionsCompleted, durationMinutes, date]
+      properties:
+        subjectId: { type: string }
+        topicId: { type: string, default: '' }
+        questionsAttempted: { type: integer, minimum: 0 }
+        questionsCompleted: { type: integer, minimum: 0 }
+        questionsCorrect: { type: [integer, 'null'], minimum: 0 }
+        durationMinutes: { type: number, minimum: 0 }
+        notes: { type: string }
+        date: { type: string, format: date }
+    Assessment:
+      type: object
+      required: [id, subjectId, topicIds, title, date, coverage, preparationProgress, marksObtained, marksTotal, createdAt]
+      properties:
+        id: { type: string }
+        subjectId: { type: string }
+        topicIds:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+        title: { type: string, minLength: 1 }
+        date:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          description: Empty string when unscheduled.
+        coverage: { type: string }
+        preparationProgress: { type: number, minimum: 0, maximum: 100 }
+        marksObtained: { type: [number, 'null'], minimum: 0 }
+        marksTotal: { type: [number, 'null'], minimum: 0 }
+        createdAt: { type: string, format: date-time }
+    AssessmentInput:
+      type: object
+      required: [subjectId, title]
+      properties:
+        subjectId: { type: string }
+        topicIds:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+        title: { type: string, minLength: 1 }
+        date:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          default: ''
+        coverage: { type: string }
+        preparationProgress: { type: number, minimum: 0, maximum: 100, default: 0 }
+        marksObtained: { type: [number, 'null'], minimum: 0 }
+        marksTotal: { type: [number, 'null'], minimum: 0 }
+    AssessmentPatch:
+      type: object
+      properties:
+        subjectId: { type: string }
+        topicIds:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+        title: { type: string, minLength: 1 }
+        date: { type: string }
+        coverage: { type: string }
+        preparationProgress: { type: number, minimum: 0, maximum: 100 }
+        marksObtained: { type: [number, 'null'], minimum: 0 }
+        marksTotal: { type: [number, 'null'], minimum: 0 }
+    StudySession:
+      type: object
+      required: [id, subjectId, topicId, durationMinutes, notes, date, createdAt]
+      properties:
+        id: { type: string }
+        subjectId: { type: string, description: Empty string for general study. }
+        topicId: { type: string, description: Empty string when not linked to a topic. }
+        durationMinutes: { type: number, exclusiveMinimum: 0 }
+        notes: { type: string }
+        date:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+        createdAt: { type: string, format: date-time }
+    StudySessionInput:
+      type: object
+      required: [durationMinutes, date]
+      properties:
+        subjectId: { type: string, default: '' }
+        topicId: { type: string, default: '' }
+        durationMinutes: { type: number, exclusiveMinimum: 0 }
+        notes: { type: string }
+        date: { type: string, format: date }
+    StudyWorkspace:
+      type: object
+      required: [subjects, chapters, topics, learningActivities, notes, revisions, practiceSessions, assessments, studySessions]
+      properties:
+        subjects: { type: array, items: { $ref: '#/components/schemas/Subject' } }
+        chapters: { type: array, items: { $ref: '#/components/schemas/Chapter' } }
+        topics: { type: array, items: { $ref: '#/components/schemas/Topic' } }
+        learningActivities: { type: array, items: { $ref: '#/components/schemas/LearningActivity' } }
+        notes: { type: array, items: { $ref: '#/components/schemas/StudyNote' } }
+        revisions: { type: array, items: { $ref: '#/components/schemas/Revision' } }
+        practiceSessions: { type: array, items: { $ref: '#/components/schemas/PracticeSession' } }
+        assessments: { type: array, items: { $ref: '#/components/schemas/Assessment' } }
+        studySessions: { type: array, items: { $ref: '#/components/schemas/StudySession' } }
+    StudyOverview:
+      type: object
+      required: [subjectCount, completedTopics, topicCount, progress, completedChapters, pendingChapters, upcomingTests, pendingRevisions, activities]
+      properties:
+        subjectCount: { type: integer, minimum: 0 }
+        completedTopics: { type: integer, minimum: 0 }
+        topicCount: { type: integer, minimum: 0 }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        completedChapters: { type: integer, minimum: 0 }
+        pendingChapters: { type: integer, minimum: 0 }
+        upcomingTests: { type: array, items: { $ref: '#/components/schemas/Assessment' } }
+        pendingRevisions: { type: array, items: { $ref: '#/components/schemas/Revision' } }
+        activities: { type: array, items: { type: object, additionalProperties: true } }
+    Project:
+      type: object
+      required: [id, name, description, category, priority, status, isArchived, startDate, deadline, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        category: { type: string }
+        priority: { type: string, enum: [low, medium, high, urgent] }
+        status: { type: string, enum: [not_started, active, on_hold, completed, archived] }
+        isArchived: { type: boolean }
+        startDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          description: Empty string when unset.
+        deadline:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          description: Empty string when unset.
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ProjectInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        category: { type: string }
+        priority: { type: string, enum: [low, medium, high, urgent], default: medium }
+        status: { type: string, enum: [not_started, active, on_hold, completed, archived], default: active }
+        startDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          default: ''
+        deadline:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          default: ''
+    ProjectPatch:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        category: { type: string }
+        priority: { type: string, enum: [low, medium, high, urgent] }
+        status: { type: string, enum: [not_started, active, on_hold, completed, archived] }
+        startDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+        deadline:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+    Milestone:
+      type: object
+      required: [id, projectId, name, description, dueDate, completed, completedAt, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        dueDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          description: Empty string when unset.
+        completed: { type: boolean }
+        completedAt: { type: [string, 'null'], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    MilestoneInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        dueDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          default: ''
+        completed: { type: boolean, default: false }
+    MilestonePatch:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        dueDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+        completed: { type: boolean }
+    ProjectNote:
+      type: object
+      required: [id, projectId, title, content, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        title: { type: string, minLength: 1 }
+        content: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ProjectNoteInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        content: { type: string }
+    ProjectNotePatch:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        content: { type: string }
+    ProjectResource:
+      type: object
+      required: [id, projectId, name, description, type, url, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        type: { type: string, enum: [link, document, reference, file, other] }
+        url: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ResourceInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        description: { type: string }
+        type: { type: string, enum: [link, document, reference, file, other], default: link }
+        url: { type: string }
+    ImportantDate:
+      type: object
+      required: [id, projectId, label, date, description, createdAt]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        label: { type: string, minLength: 1 }
+        date: { type: string, format: date }
+        description: { type: string }
+        createdAt: { type: string, format: date-time }
+    ImportantDateInput:
+      type: object
+      required: [label, date]
+      properties:
+        label: { type: string, minLength: 1 }
+        date: { type: string, format: date }
+        description: { type: string }
+    ActivityLogEntry:
+      type: object
+      required: [id, projectId, type, description, metadata, timestamp]
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        type: { type: string }
+        description: { type: string }
+        metadata: { type: object, additionalProperties: true }
+        timestamp: { type: string, format: date-time }
+    ActivityLogInput:
+      type: object
+      required: [type, description]
+      properties:
+        type: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        metadata: { type: object, additionalProperties: true }
+    ProjectWorkspace:
+      type: object
+      required: [projects, milestones, notes, resources, importantDates, activities]
+      properties:
+        projects: { type: array, items: { $ref: '#/components/schemas/Project' } }
+        milestones: { type: array, items: { $ref: '#/components/schemas/Milestone' } }
+        notes: { type: array, items: { $ref: '#/components/schemas/ProjectNote' } }
+        resources: { type: array, items: { $ref: '#/components/schemas/ProjectResource' } }
+        importantDates: { type: array, items: { $ref: '#/components/schemas/ImportantDate' } }
+        activities: { type: array, items: { $ref: '#/components/schemas/ActivityLogEntry' } }
+    ProjectOverview:
+      type: object
+      required: [totalProjects, activeProjects, completedProjects, onHoldProjects, notStartedProjects, archivedProjects, averageActiveProgress, upcomingDeadlines, overdueItems, recentlyUpdated]
+      properties:
+        totalProjects: { type: integer, minimum: 0, description: Excludes archived projects, matching current UI metrics. }
+        activeProjects: { type: integer, minimum: 0 }
+        completedProjects: { type: integer, minimum: 0 }
+        onHoldProjects: { type: integer, minimum: 0 }
+        notStartedProjects: { type: integer, minimum: 0 }
+        archivedProjects: { type: integer, minimum: 0 }
+        averageActiveProgress: { type: integer, minimum: 0, maximum: 100 }
+        upcomingDeadlines: { type: array, items: { type: object, additionalProperties: true } }
+        overdueItems: { type: array, items: { type: object, additionalProperties: true } }
+        recentlyUpdated: { type: array, items: { $ref: '#/components/schemas/Project' } }
+    Task:
+      type: object
+      required: [id, title, description, priority, status, completed, completedAt, dueDate, category, relatedModule, projectId, milestoneId, tags, subtasks, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        priority: { type: string, enum: [low, medium, high, urgent] }
+        status: { type: string, enum: [todo, in_progress, completed] }
+        completed: { type: boolean }
+        completedAt: { type: [string, 'null'], format: date-time }
+        dueDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          description: Empty string when no due date.
+        category: { type: string }
+        relatedModule: { type: string, enum: ['', study, projects, personal] }
+        projectId: { type: string, description: Empty string when unassigned to a project. }
+        milestoneId: { type: string, description: Empty string when unassigned to a milestone. }
+        tags:
+          type: array
+          items: { type: string }
+        subtasks:
+          type: array
+          items:
+            type: object
+            required: [id, title, completed]
+            properties:
+              id: { type: string }
+              title: { type: string, minLength: 1 }
+              completed: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    TaskInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        priority: { type: string, enum: [low, medium, high, urgent], default: medium }
+        status: { type: string, enum: [todo, in_progress, completed], default: todo }
+        dueDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+          default: ''
+        category: { type: string }
+        relatedModule: { type: string, enum: ['', study, projects, personal], default: '' }
+        projectId: { type: string, default: '' }
+        milestoneId: { type: string, default: '' }
+        tags:
+          type: array
+          items: { type: string }
+        subtasks:
+          type: array
+          items:
+            type: object
+            required: [title]
+            properties:
+              id: { type: string }
+              title: { type: string, minLength: 1 }
+              completed: { type: boolean, default: false }
+    TaskPatch:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string }
+        priority: { type: string, enum: [low, medium, high, urgent] }
+        status: { type: string, enum: [todo, in_progress, completed] }
+        dueDate:
+          oneOf:
+            - { type: string, format: date }
+            - { type: string, enum: [''] }
+        category: { type: string }
+        relatedModule: { type: string, enum: ['', study, projects, personal] }
+        projectId: { type: string }
+        milestoneId: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        subtasks:
+          type: array
+          items:
+            type: object
+            required: [id, title, completed]
+            properties:
+              id: { type: string }
+              title: { type: string, minLength: 1 }
+              completed: { type: boolean }
+    TaskOverview:
+      type: object
+      required: [total, completed, today, urgent, overdue, statusCounts, priorityCounts, categoryCounts, completionRate]
+      properties:
+        total: { type: integer, minimum: 0 }
+        completed: { type: integer, minimum: 0 }
+        today: { type: integer, minimum: 0 }
+        urgent: { type: integer, minimum: 0 }
+        overdue: { type: integer, minimum: 0 }
+        statusCounts:
+          type: object
+          required: [todo, in_progress, completed]
+          properties:
+            todo: { type: integer, minimum: 0 }
+            in_progress: { type: integer, minimum: 0 }
+            completed: { type: integer, minimum: 0 }
+        priorityCounts:
+          type: object
+          additionalProperties: { type: integer, minimum: 0 }
+        categoryCounts:
+          type: array
+          items:
+            type: object
+            required: [category, count]
+            properties:
+              category: { type: string }
+              count: { type: integer, minimum: 0 }
+        completionRate: { type: integer, minimum: 0, maximum: 100 }
+    ProgressDomain:
+      type: object
+      required: [key, value, count]
+      properties:
+        key: { type: string, enum: [study, tasks, projects] }
+        value: { type: integer, minimum: 0, maximum: 100 }
+        count: { type: integer, minimum: 0 }
+    DashboardSummary:
+      type: object
+      required: [asOf, vitals, progress, study, projects, taskActivity]
+      properties:
+        asOf: { type: string, format: date-time }
+        vitals:
+          type: object
+          required: [openTasks, activeProjects, completedStudyTopics, totalStudyTopics, completedMilestones, totalMilestones, remindersEnabled]
+          properties:
+            openTasks: { type: integer, minimum: 0 }
+            activeProjects: { type: integer, minimum: 0 }
+            completedStudyTopics: { type: integer, minimum: 0 }
+            totalStudyTopics: { type: integer, minimum: 0 }
+            completedMilestones: { type: integer, minimum: 0 }
+            totalMilestones: { type: integer, minimum: 0 }
+            remindersEnabled: { type: boolean }
+        progress:
+          type: object
+          required: [overall, domains]
+          properties:
+            overall: { type: integer, minimum: 0, maximum: 100 }
+            domains:
+              type: array
+              items: { $ref: '#/components/schemas/ProgressDomain' }
+        study: { $ref: '#/components/schemas/StudyOverview' }
+        projects: { $ref: '#/components/schemas/ProjectOverview' }
+        taskActivity:
+          type: array
+          maxItems: 4
+          items: { $ref: '#/components/schemas/Task' }
+    Settings:
+      type: object
+      required: [general, appearance, notifications, applicationMode, moduleSettings]
+      properties:
+        general:
+          type: object
+          required: [defaultLandingPage, dateFormat, timeFormat]
+          properties:
+            defaultLandingPage: { type: string, enum: [/dashboard, /study, /projects, /settings] }
+            dateFormat: { type: string, enum: [locale, 'MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'] }
+            timeFormat: { type: string, enum: ['12h', '24h'] }
+        appearance:
+          type: object
+          required: [theme, accentColor, density]
+          properties:
+            theme: { type: string, enum: [system, dark, light] }
+            accentColor: { type: string, enum: [blue, red] }
+            density: { type: string, enum: [comfortable, compact] }
+        notifications:
+          type: object
+          required: [enabled, soundEnabled, reminders, history]
+          properties:
+            enabled: { type: boolean }
+            soundEnabled: { type: boolean }
+            reminders:
+              type: object
+              required: [enabled, leadHours, reminderTime]
+              properties:
+                enabled: { type: boolean }
+                leadHours: { type: integer, enum: [0, 1, 6, 12, 24, 48] }
+                reminderTime: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$' }
+            history:
+              type: array
+              maxItems: 100
+              items: { $ref: '#/components/schemas/NotificationHistoryEntry' }
+        applicationMode: { type: string, enum: [simple, gamified] }
+        moduleSettings:
+          type: object
+          additionalProperties: { type: object, additionalProperties: true }
+    NotificationHistoryEntry:
+      type: object
+      required: [id, title, createdAt]
+      properties:
+        id: { type: string }
+        sourceId: { type: string }
+        title: { type: string }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+    Backup:
+      type: object
+      required: [application, formatVersion, exportedAt, modules]
+      properties:
+        application: { type: string, const: LifeStack }
+        formatVersion: { type: integer, const: 1 }
+        exportedAt: { type: string, format: date-time }
+        modules:
+          type: object
+          required: [settings, study, projects, tasks]
+          properties:
+            settings: { $ref: '#/components/schemas/Settings' }
+            study: { $ref: '#/components/schemas/StudyWorkspace' }
+            projects: { $ref: '#/components/schemas/ProjectWorkspace' }
+            tasks:
+              type: object
+              required: [tasks]
+              properties:
+                tasks: { type: array, items: { $ref: '#/components/schemas/Task' } }
+          additionalProperties: true
+    BackupRecord:
+      type: object
+      required: [id, createdAt, data]
+      properties:
+        id: { type: string }
+        createdAt: { type: string, format: date-time }
+        data: { $ref: '#/components/schemas/Backup' }
+    SubjectPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Subject' } }
+    ChapterPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Chapter' } }
+    TopicPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Topic' } }
+    LearningActivityPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/LearningActivity' } }
+    StudyNotePage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/StudyNote' } }
+    RevisionPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Revision' } }
+    PracticeSessionPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/PracticeSession' } }
+    AssessmentPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Assessment' } }
+    StudySessionPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/StudySession' } }
+    ProjectPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Project' } }
+    MilestonePage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Milestone' } }
+    ProjectNotePage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/ProjectNote' } }
+    ResourcePage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/ProjectResource' } }
+    ImportantDatePage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/ImportantDate' } }
+    ActivityLogPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/ActivityLogEntry' } }
+    TaskPage:
+      allOf: [ { $ref: '#/components/schemas/Page' } ]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/Task' } }

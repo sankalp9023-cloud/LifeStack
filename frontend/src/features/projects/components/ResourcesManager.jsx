@@ -64,7 +64,7 @@ export default function ResourcesManager({ project, resources = [], repository, 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+      <div className="flex items-center justify-between pb-2">
         <h3 className="text-lg font-semibold text-slate-100">
           Resources & References ({projectResources.length})
         </h3>

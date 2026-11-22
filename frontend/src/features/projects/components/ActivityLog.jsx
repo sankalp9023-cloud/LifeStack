@@ -8,7 +8,7 @@ export default function ActivityLog({ project, activities = [] }) {
 
   return (
     <div className="space-y-4">
-      <div className="border-b border-slate-700 pb-2">
+      <div className="pb-2">
         <h3 className="text-lg font-semibold text-slate-100">
           Activity History ({projectActivities.length})
         </h3>

@@ -67,7 +67,7 @@ export default function StudyDashboard({ data, settings, onNavigate }) {
         <section className="hud-surface rounded border border-slate-800 bg-slate-900/50 p-4 lg:col-span-2">
           <h2 className="mb-3 font-semibold">Recent study activity</h2>
           {dashboard.activities.length === 0 ? <p className="text-sm text-slate-400">No study activity yet. Record a session or complete a learning activity to get started.</p> : (
-            <ul className="divide-y divide-slate-700">
+            <ul className="space-y-1">
               {dashboard.activities.map((activity) => (
                 <li key={`${activity.type}-${activity.id}`} className="flex flex-wrap justify-between gap-2 py-2 text-sm">
                   <span>{activity.type}: {activity.title || topicName(activity.topicId) || subjectName(activity.subjectId)}</span>

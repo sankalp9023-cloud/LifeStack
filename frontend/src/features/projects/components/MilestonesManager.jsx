@@ -71,7 +71,7 @@ export default function MilestonesManager({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+      <div className="flex items-center justify-between pb-2">
         <h3 className="text-lg font-semibold text-slate-100">
           Milestones ({projectMilestones.length})
         </h3>
@@ -201,7 +201,7 @@ export default function MilestonesManager({
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800/80 pt-2 text-xs text-slate-400">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 pt-2 text-xs text-slate-400">
                   <div className="flex items-center gap-3">
                     {m.dueDate ? (
                       <span className={metrics.isOverdue ? 'text-red-400 font-semibold' : ''}>

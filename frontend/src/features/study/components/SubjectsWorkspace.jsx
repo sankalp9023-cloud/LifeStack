@@ -10,12 +10,14 @@ const LEARNING_TYPES = [
 
 export default function SubjectsWorkspace({ data, repository, run, onAddNote }) {
   const [selectedId, setSelectedId] = useState('');
+  const [selectedChapterId, setSelectedChapterId] = useState('');
   const [subjectForm, setSubjectForm] = useState({ name: '', goal: '', description: '' });
   const [editForm, setEditForm] = useState({ name: '', goal: '', description: '' });
   const [showSubjectForm, setShowSubjectForm] = useState(false);
   const [showSubjectEdit, setShowSubjectEdit] = useState(false);
   const selectedSubject = data.subjects.find((subject) => subject.id === selectedId);
   const chapters = data.chapters.filter((chapter) => chapter.subjectId === selectedId);
+  const selectedChapter = chapters.find((chapter) => chapter.id === selectedChapterId);
 
   const saveSubject = (event) => {
     event.preventDefault();
@@ -29,6 +31,7 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
 
   const selectSubject = (subject) => {
     setSelectedId(subject.id);
+    setSelectedChapterId('');
     setEditForm({ name: subject.name, goal: subject.goal, description: subject.description });
   };
 
@@ -52,21 +55,21 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
 
       {!selectedSubject && <section>
         {data.subjects.length === 0 && <p className="mb-3 text-sm text-slate-400">No subjects yet. Add a subject to begin organizing your study.</p>}
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ul className="space-y-1">
             {data.subjects.map((subject) => {
               const progress = getSubjectProgress(data, subject.id);
               return (
-                <li key={subject.id} className="study-subject-card min-w-0 border border-slate-700 bg-slate-950/30 p-4 transition-colors hover:border-sky-500/50">
-                  <div className="flex min-h-36 flex-col">
-                    <button type="button" className="flex flex-1 flex-col items-start justify-between gap-4 text-left" onClick={() => selectSubject(subject)}>
-                      <span className="text-base font-semibold text-slate-100">{subject.name}</span>
-                      <span className="w-full">
-                        <span className="mb-2 flex items-center justify-between gap-2 text-xs text-slate-400"><span>{progress.completed}/{progress.total} topics</span><span className="text-cyan-300">{progress.percentage}%</span></span>
-                        <span className="block h-1 overflow-hidden bg-slate-800"><span className="block h-full bg-cyan-400" style={{ width: `${progress.percentage}%` }} /></span>
+                <li key={subject.id} className="study-subject-row min-w-0 transition-colors hover:bg-slate-900/50">
+                  <div className="flex flex-wrap items-center gap-3 px-3 py-3">
+                    <button type="button" className="min-w-48 flex-1 text-left" onClick={() => selectSubject(subject)}>
+                      <span className="block font-medium text-slate-100">{subject.name}</span>
+                      {subject.goal && <span className="mt-0.5 block text-xs text-slate-400">Goal: {subject.goal}</span>}
+                      <span className="mt-2 flex items-center gap-3 text-xs text-slate-400">
+                        <span className="flex-1 overflow-hidden bg-slate-800"><span className="block h-1 bg-cyan-400" style={{ width: `${progress.percentage}%` }} /></span>
+                        <span className="shrink-0 text-cyan-300">{progress.completed}/{progress.total} topics · {progress.percentage}%</span>
                       </span>
                     </button>
-                    {subject.goal && <p className="mt-2 text-sm text-slate-400">Goal: {subject.goal}</p>}
-                    <div className="mt-3 flex gap-3 border-t border-slate-700/70 pt-2 text-xs">
+                    <div className="flex gap-3 text-xs">
                       <button type="button" className="study-control study-control-edit" onClick={() => { selectSubject(subject); setEditForm({ name: subject.name, goal: subject.goal || '', description: subject.description || '' }); setShowSubjectEdit(true); }}>Edit</button>
                       <button type="button" className="study-control study-control-delete" onClick={() => {
                         if (window.confirm(`Delete ${subject.name} and its chapters, topics, notes, practice, and assessments?`)) {
@@ -78,8 +81,8 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
                 </li>
               );
             })}
-            <li className="min-h-36">
-              <button type="button" onClick={() => setShowSubjectForm(true)} className="flex h-full min-h-36 w-full items-center justify-center border border-dashed border-sky-500/40 bg-sky-950/10 p-4 text-sm font-medium text-cyan-200 transition-colors hover:border-sky-400 hover:bg-sky-950/25">
+            <li>
+              <button type="button" onClick={() => setShowSubjectForm(true)} className="flex w-full items-center px-3 py-3 text-sm font-medium text-cyan-200 transition-colors hover:bg-sky-950/25">
                 ＋ Add subject
               </button>
             </li>
@@ -90,7 +93,7 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
         <section className="subject-detail-screen min-h-full space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <button type="button" className="study-control study-control-back mb-3 text-sm" onClick={() => setSelectedId('')}>← Back to subjects</button>
+              <button type="button" className="study-control study-control-back mb-3 text-sm" onClick={() => { setSelectedChapterId(''); setSelectedId(''); }}>← Back to subjects</button>
               <h2 className="text-lg font-semibold">{selectedSubject.name}</h2>
               {selectedSubject.description && <p className="mt-1 text-sm text-slate-400">{selectedSubject.description}</p>}
               {selectedSubject.goal && <p className="mt-1 text-sm text-slate-400">Goal: {selectedSubject.goal}</p>}
@@ -115,14 +118,32 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
           </Modal>
 
           <div>
-            <h3 className="mb-3 font-semibold">Chapters</h3>
-            {chapters.length === 0 && <p className="mb-3 text-sm text-slate-400">No chapters in this subject yet.</p>}
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
-              {chapters.map((chapter) => (
-                <ChapterCard key={chapter.id} chapter={chapter} data={data} repository={repository} run={run} onAddNote={onAddNote} />
-              ))}
-              <AddChapterForm subjectId={selectedId} repository={repository} run={run} />
-            </div>
+            {selectedChapter ? (
+              <div className="space-y-3">
+                <button type="button" className="study-control study-control-back text-sm" onClick={() => setSelectedChapterId('')}>← Back to chapters</button>
+                <ChapterCard chapter={selectedChapter} data={data} repository={repository} run={run} onAddNote={onAddNote} />
+              </div>
+            ) : (
+              <>
+                <h3 className="mb-3 font-semibold">Chapters</h3>
+                {chapters.length === 0 && <p className="mb-3 text-sm text-slate-400">No chapters in this subject yet.</p>}
+                <ul className="space-y-1">
+                  {chapters.map((chapter) => {
+                    const progress = getChapterProgress(data, chapter.id);
+                    return (
+                      <li key={chapter.id} className="flex flex-wrap items-center gap-3 px-3 py-3 hover:bg-slate-900/50">
+                        <button type="button" className="min-w-48 flex-1 text-left" onClick={() => setSelectedChapterId(chapter.id)}>
+                          <span className="block font-medium">{chapter.name}</span>
+                          {chapter.description && <span className="mt-0.5 block text-xs text-slate-400">{chapter.description}</span>}
+                        </button>
+                        <span className="text-xs text-slate-400">{progress.completed}/{progress.total} topics complete</span>
+                      </li>
+                    );
+                  })}
+                  <li><AddChapterForm subjectId={selectedId} repository={repository} run={run} /></li>
+                </ul>
+              </>
+            )}
           </div>
         </section>
       )}
@@ -135,7 +156,7 @@ function AddChapterForm({ subjectId, repository, run }) {
   const [description, setDescription] = useState('');
   const [open, setOpen] = useState(false);
   return (
-    <><button type="button" className="flex min-h-36 w-full items-center justify-center border border-dashed border-sky-500/40 bg-sky-950/10 p-4 text-sm font-medium text-cyan-200 transition-colors hover:border-sky-400 hover:bg-sky-950/25" onClick={() => setOpen(true)}>＋ Add chapter</button><Modal open={open} title="Add chapter" onClose={() => setOpen(false)}><form className="flex flex-wrap items-end gap-3" onSubmit={(event) => {
+    <><button type="button" className="flex w-full items-center px-3 py-3 text-sm font-medium text-cyan-200 transition-colors hover:bg-sky-950/25" onClick={() => setOpen(true)}>＋ Add chapter</button><Modal open={open} title="Add chapter" onClose={() => setOpen(false)}><form className="flex flex-wrap items-end gap-3" onSubmit={(event) => {
       event.preventDefault();
       if (run(() => repository.createChapter(subjectId, { name, description }))) {
         setName('');
@@ -164,7 +185,7 @@ function ChapterCard({ chapter, data, repository, run, onAddNote }) {
     : [...current, type]);
 
   return (
-    <article className="study-chapter-card space-y-3 rounded border border-slate-700 p-3">
+    <article className="study-chapter-detail space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {editing ? (
           <form className="flex gap-2" onSubmit={(event) => {
@@ -197,7 +218,7 @@ function ChapterCard({ chapter, data, repository, run, onAddNote }) {
       </form></Modal>
 
       {topics.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-1">
           {topics.map((topic) => (
             <TopicCard key={topic.id} topic={topic} data={data} repository={repository} run={run} onAddNote={onAddNote} />
           ))}
@@ -221,7 +242,7 @@ function TopicCard({ topic, data, repository, run, onAddNote }) {
     : [...items, type]);
 
   return (
-    <div className="rounded bg-slate-900 p-3">
+    <div className="px-3 py-3 hover:bg-slate-900/50">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {editing ? (
           <form className="flex flex-wrap gap-2" onSubmit={(event) => {

@@ -69,22 +69,12 @@ export default function TasksPage() {
     <div className="tasks-page select-text min-h-0 w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
       <div className="mx-auto w-full max-w-none space-y-5">
 
-        {/* Page Header */}
-        <header className="hud-page-header flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[.22em] text-cyan-400">LifeStack / Workspace</p>
-            <h1 className="mt-1 text-2xl font-semibold text-slate-100">Tasks</h1>
-            <p className="mt-1 text-sm text-slate-400">One clear place for everything you need to get done.</p>
-          </div>
-          <button className="task-primary" onClick={openCreate}>＋ New task</button>
-        </header>
-
         {/* Alerts */}
         {error && <p role="alert" className="task-alert">Storage unavailable: {error.message}</p>}
         {actionError && <p role="alert" className="task-alert">{actionError}</p>}
 
-        {/* ── Dashboard ── */}
-        <section id="task-overview-panel" className="workspace-section-panel hud-surface scroll-mt-6 rounded-2xl border border-slate-700/70 p-4 sm:p-5">
+        {/* â”€â”€ Dashboard â”€â”€ */}
+        <section id="task-overview-panel" className="workspace-section-panel scroll-mt-6">
           <h2 className="mb-4 text-lg font-semibold">Task overview</h2>
           <div className="space-y-6">
             {/* Summary stat cards */}
@@ -110,7 +100,7 @@ export default function TasksPage() {
               return (
                 <div className="task-overdue-alert rounded border border-red-800/80 bg-red-950/30 p-4 space-y-2">
                   <div className="flex items-center gap-2 text-sm font-semibold text-red-300">
-                    <span>⚠ Overdue Tasks ({overdueList.length})</span>
+                    <span>âš  Overdue Tasks ({overdueList.length})</span>
                   </div>
                   <div className="space-y-1.5">
                     {overdueList.slice(0, 5).map((t) => {
@@ -119,7 +109,7 @@ export default function TasksPage() {
                         <div
                           key={t.id}
                           onClick={() => { setSelected(t); focusTaskList(); }}
-                          className="flex items-center justify-between text-xs text-red-200 hover:text-white cursor-pointer py-1 border-b border-red-900/40 last:border-0"
+                          className="flex items-center justify-between text-xs text-red-200 hover:text-white cursor-pointer py-1"
                         >
                           <div className="flex items-center gap-2">
                             {t.priority && (
@@ -131,7 +121,7 @@ export default function TasksPage() {
                             {t.category && <span className="text-red-400/80">({t.category})</span>}
                           </div>
                           <span className="font-mono font-bold text-red-300">
-                            {daysOverdue} day{daysOverdue !== 1 ? 's' : ''} overdue · {t.dueDate}
+                            {daysOverdue} day{daysOverdue !== 1 ? 's' : ''} overdue Â· {t.dueDate}
                           </span>
                         </div>
                       );
@@ -145,8 +135,8 @@ export default function TasksPage() {
             <div className="task-activity-grid grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Today's schedule */}
               <div className="rounded border border-slate-800 bg-slate-900/50 p-4 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <h3 className="text-sm font-semibold text-slate-100">◷ Today's Schedule</h3>
+                <div className="flex items-center justify-between pb-2">
+                  <h3 className="text-sm font-semibold text-slate-100">â—· Today's Schedule</h3>
                   <span className="text-xs text-slate-400 font-mono">{stats.today} items</span>
                 </div>
                 {views["Today's Schedule"].length === 0 ? (
@@ -164,7 +154,7 @@ export default function TasksPage() {
                           onClick={(e) => { e.stopPropagation(); run(() => repository.updateTask(t.id, { status: t.status === 'completed' ? 'todo' : 'completed' })); }}
                           aria-label="Toggle completion"
                         >
-                          {t.status === 'completed' ? '✓' : ''}
+                          {t.status === 'completed' ? 'âœ“' : ''}
                         </button>
                         <div className="flex-1 min-w-0">
                           <p className={`font-medium text-slate-200 truncate ${t.status === 'completed' ? 'line-through text-slate-500' : ''}`}>{t.title}</p>
@@ -181,13 +171,13 @@ export default function TasksPage() {
 
               {/* Recently added */}
               <div className="rounded border border-slate-800 bg-slate-900/50 p-4 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div className="flex items-center justify-between pb-2">
                   <h3 className="text-sm font-semibold text-slate-100">Recent Tasks</h3>
                   <button
                     onClick={focusTaskList}
                     className="text-xs text-cyan-400 hover:underline"
                   >
-                    View All ({stats.total}) →
+                    View All ({stats.total}) â†’
                   </button>
                 </div>
                 {tasks.length === 0 ? (
@@ -230,14 +220,14 @@ export default function TasksPage() {
           </div>
         </section>
 
-        {/* ── Task List ── */}
-        <section id="task-list-panel" className="workspace-section-panel hud-surface scroll-mt-6 rounded-2xl border border-slate-700/70 p-4 sm:p-5">
+        {/* â”€â”€ Task List â”€â”€ */}
+        <section id="task-list-panel" className="workspace-section-panel scroll-mt-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold">All tasks</h2>
               <p className="text-sm text-slate-400">Browse, filter, and update your tasks.</p>
             </div>
-            <button type="button" className="task-primary" onClick={openCreate}>+ Add task</button>
+            <button type="button" className="workspace-primary-button" onClick={openCreate}>+ Add task</button>
           </div>
           <div className="space-y-5">
             <TaskViews

@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import TopNavbar from '@/components/navigation/TopNavbar';
 import SettingsPage from '@/pages/Settings';
 import useStudyReminders from '@/features/settings/hooks/useStudyReminders';
+import { ROUTES } from '@/constants/routes';
+
+const PROFILE_SECTIONS = new Set([
+  'profile', 'appearance', 'notifications', 'modules', 'system',
+  'terms', 'about', 'logout', 'deleteAccount',
+]);
 
 export default function RootLayout() {
   const [profileDialogSection, setProfileDialogSection] = useState(null);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const navigate = useNavigate();
   const backgroundClass = pathname === '/' || pathname.startsWith('/dashboard')
     ? 'dashboard-shell'
     : pathname.startsWith('/projects')
@@ -16,6 +22,17 @@ export default function RootLayout() {
         ? 'tasks-shell'
         : '';
   useStudyReminders();
+
+  useEffect(() => {
+    if (pathname !== ROUTES.SETTINGS) return;
+    const requestedSection = new URLSearchParams(search).get('section');
+    setProfileDialogSection(
+      requestedSection && PROFILE_SECTIONS.has(requestedSection)
+        ? requestedSection
+        : 'profile',
+    );
+    navigate(ROUTES.DASHBOARD, { replace: true });
+  }, [navigate, pathname, search]);
 
   useEffect(() => {
     if (!profileDialogSection) return undefined;
@@ -27,23 +44,21 @@ export default function RootLayout() {
   }, [profileDialogSection]);
 
   return (
-    <div className={`app-shell ${backgroundClass} relative h-screen min-h-[100dvh] w-full bg-space-950 text-slate-100 flex flex-col overflow-hidden select-none`}>
+    <div className={`app-shell ${backgroundClass} relative h-screen min-h-[100dvh] w-full text-slate-100 flex flex-col overflow-hidden select-none`}>
       {/* Top Application Bar */}
       <TopNavbar
         onOpenProfileDialog={setProfileDialogSection}
-        profileMenuOpen={profileMenuOpen}
-        setProfileMenuOpen={setProfileMenuOpen}
       />
 
       {/* Main Viewport Content Area */}
       <div className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden md:flex-row">
         <main className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden">
-          <Outlet />
+          {pathname === ROUTES.SETTINGS ? null : <Outlet />}
         </main>
       </div>
       {profileDialogSection && (
         <div
-          className="fixed inset-0 z-50 flex justify-end bg-space-950/35 backdrop-blur-[2px]"
+          className="profile-settings-backdrop fixed inset-0 z-50 flex items-stretch justify-end p-3 sm:p-4"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setProfileDialogSection(null);
           }}
@@ -52,16 +67,13 @@ export default function RootLayout() {
             role="dialog"
             aria-modal="true"
             aria-label="Profile and settings panel"
-            className="h-full w-full overflow-y-auto border-l border-slate-700/70 bg-space-950/95 shadow-2xl md:w-[min(42vw,36rem)]"
+            className="profile-menu h-full w-full overflow-y-auto rounded-2xl border border-slate-700/70 shadow-2xl md:w-[min(34vw,30rem)]"
           >
             <SettingsPage
               dialogMode
               dialogSection={profileDialogSection}
               onClose={() => setProfileDialogSection(null)}
-              onBackToMenu={() => {
-                setProfileDialogSection(null);
-                setProfileMenuOpen(true);
-              }}
+              onNavigateSection={setProfileDialogSection}
             />
           </aside>
         </div>

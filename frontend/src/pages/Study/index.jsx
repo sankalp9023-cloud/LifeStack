@@ -4,7 +4,6 @@ import SubjectsWorkspace from '@/features/study/components/SubjectsWorkspace';
 import { StudySessionsWorkspace } from '@/features/study/components/RecordWorkspaces';
 import useStudyData from '@/features/study/hooks/useStudyData';
 import useSettings from '@/features/settings/hooks/useSettings';
-import FeaturePageHeader from '@/components/ui/FeaturePageHeader';
 import '@/features/study/study.css';
 
 export default function StudyPage() {
@@ -28,11 +27,6 @@ export default function StudyPage() {
   return (
     <div className="study-page select-text min-h-0 w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
       <div className="mx-auto w-full max-w-none space-y-5">
-        <FeaturePageHeader
-          title="Study"
-          description="Organize subjects and study sessions."
-        />
-
         {(storageError || error) && (
           <div role="alert" className="rounded border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
             {storageError ? `Study data could not be loaded or saved: ${storageError.message}` : error}

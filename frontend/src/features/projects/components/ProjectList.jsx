@@ -14,10 +14,9 @@ export default function ProjectList({
   repository,
   taskRepository,
   run,
-  initialStatusFilter = 'all',
 }) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
+  const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   const filteredProjects = projects.filter((p) => {
@@ -74,7 +73,6 @@ export default function ProjectList({
 
   return (
     <div className="space-y-4">
-      {/* Search and Filters Bar */}
       <div className="project-filter-bar flex flex-wrap items-center justify-between gap-3 bg-slate-900/50 p-3 rounded border border-slate-800">
         <div className="flex-1 min-w-[200px]">
           <input
@@ -118,7 +116,7 @@ export default function ProjectList({
           <button
             type="button"
             onClick={onNewProject}
-            className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500 whitespace-nowrap"
+            className="workspace-primary-button whitespace-nowrap"
           >
             + New Project
           </button>
@@ -134,13 +132,13 @@ export default function ProjectList({
               ? 'Try adjusting your search criteria or filter selections.'
               : 'Create your first project to start tracking initiatives, milestones, and deliverables.'}
           </p>
-          <button
-            type="button"
-            onClick={onNewProject}
-            className="mt-2 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500"
-          >
-            + Create New Project
-          </button>
+            <button
+              type="button"
+              onClick={onNewProject}
+              className="workspace-primary-button mt-2"
+            >
+              + Create New Project
+            </button>
         </div>
       ) : (
         <div className="project-list-grid grid gap-4 lg:grid-cols-2">
@@ -221,7 +219,7 @@ export default function ProjectList({
                 </div>
 
                 {/* Progress bar */}
-                <div className="space-y-1 pt-1 border-t border-slate-800/80">
+                <div className="space-y-1 pt-1">
                   <div className="flex items-center justify-between text-xs text-slate-400">
                     <span>
                       Progress: <strong className="text-slate-200">{metrics.completedTasks}</strong>/{metrics.totalTasks} tasks, <strong className="text-slate-200">{metrics.completedMilestones}</strong>/{metrics.totalMilestones} milestones

@@ -1,0 +1,33 @@
+{
+  "formatVersion": 1,
+  "modules": {
+    "study": {
+      "subjects": [],
+      "chapters": [],
+      "topics": [],
+      "learningActivities": [],
+      "notes": [],
+      "revisions": [],
+      "practiceSessions": [],
+      "assessments": [],
+      "studySessions": []
+    },
+    "projects": {
+      "projects": [],
+      "milestones": [],
+      "notes": [],
+      "resources": [],
+      "importantDates": [],
+      "activities": []
+    },
+    "tasks": { "tasks": [] },
+    "settings": {
+      "general": {},
+      "appearance": {},
+      "notifications": {},
+      "applicationMode": "simple",
+      "moduleSettings": {}
+    },
+    "backups": []
+  }
+}

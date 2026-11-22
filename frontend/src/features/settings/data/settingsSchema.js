@@ -25,9 +25,12 @@ export const DEFAULT_SETTINGS = {
     timeFormat: '24h',
   },
   appearance: {
-    theme: 'system',
+    theme: 'dark',
     accentColor: 'blue',
-    density: 'comfortable',
+    density: 'medium',
+  },
+  profile: {
+    displayName: 'Sam',
   },
   notifications: {
     enabled: false,
@@ -56,13 +59,23 @@ export function mergeSettingsDefaults(saved) {
   return {
     ...JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
     ...source,
+    profile: { ...DEFAULT_SETTINGS.profile, ...(source.profile || {}) },
     general: { ...DEFAULT_SETTINGS.general, ...(source.general || {}) },
     appearance: {
       ...DEFAULT_SETTINGS.appearance,
       ...(source.appearance || {}),
-      accentColor: ['blue', 'red'].includes(source.appearance?.accentColor)
+      theme: source.appearance?.theme === 'light' ? 'light' : 'dark',
+      accentColor: ['blue', 'red', 'violet', 'green'].includes(source.appearance?.accentColor)
         ? source.appearance.accentColor
         : DEFAULT_SETTINGS.appearance.accentColor,
+      density: ({
+        comfortable: 'medium',
+        compact: 'small',
+      })[source.appearance?.density] || (
+        ['small', 'medium', 'large'].includes(source.appearance?.density)
+          ? source.appearance.density
+          : DEFAULT_SETTINGS.appearance.density
+      ),
     },
     notifications: {
       ...DEFAULT_SETTINGS.notifications,
@@ -76,7 +89,7 @@ export function mergeSettingsDefaults(saved) {
 
 const LANDING_PAGES = ['/dashboard', '/study', '/projects', '/settings'];
 const DATE_FORMATS = ['locale', 'MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'];
-const ACCENT_COLORS = ['blue', 'red'];
+const ACCENT_COLORS = ['blue', 'red', 'violet', 'green'];
 const LEAD_HOURS = [0, 1, 6, 12, 24, 48];
 
 function isRecord(value) {
@@ -90,7 +103,8 @@ export function validateSettings(settings) {
     || !isRecord(settings.notifications)
     || !isRecord(settings.notifications.reminders)
     || !Array.isArray(settings.notifications.history)
-    || !isRecord(settings.moduleSettings)) {
+    || !isRecord(settings.moduleSettings)
+    || !isRecord(settings.profile)) {
     throw new Error('Settings data has an invalid structure.');
   }
   const { general, appearance, notifications } = settings;
@@ -99,10 +113,15 @@ export function validateSettings(settings) {
     || !['12h', '24h'].includes(general.timeFormat)) {
     throw new Error('General settings contain an unsupported value.');
   }
-  if (!['system', 'dark', 'light'].includes(appearance.theme)
+  if (!['dark', 'light'].includes(appearance.theme)
     || !ACCENT_COLORS.includes(appearance.accentColor)
-    || !['comfortable', 'compact'].includes(appearance.density)) {
+    || !['small', 'medium', 'large'].includes(appearance.density)) {
     throw new Error('Appearance settings contain an unsupported value.');
+  }
+  if (typeof settings.profile.displayName !== 'string'
+    || !settings.profile.displayName.trim()
+    || settings.profile.displayName.trim().length > 40) {
+    throw new Error('Profile name must be between 1 and 40 characters.');
   }
   if (typeof notifications.enabled !== 'boolean'
     || typeof notifications.soundEnabled !== 'boolean'

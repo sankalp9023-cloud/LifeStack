@@ -1,15 +1,20 @@
 # Feature Modules
 
-This directory contains self-contained feature slices following a domain-driven structure:
+Each feature owns its domain components and data logic. Route components under `pages/` compose these modules; shared primitives belong in `components/` and should not depend on feature repositories.
 
-- **`dashboard/`**: Neural core orchestration, orbital widget data, layout coordinates, and active metrics.
-- **`study/`**: Persisted subject/chapter/topic management, learning activities, notes, revision history, practice, assessments, and study dashboards.
-- **`projects/`**: Persisted project tracking, milestones, notes, resources, important dates, and activity history.
-- **`settings/`**: Shared preference schemas, local persistence, browser notifications, app-wide backup/restore, and system information.
-- **`services/taskRepository.js`**: Shared persisted task data linked to projects and milestones.
+| Directory | Responsibility |
+|---|---|
+| `dashboard/` | Read-only summaries composed from Study, Projects, Tasks, and Settings. Progress values are derived from feature data. |
+| `study/` | Subjects, chapters, topics, learning activities, notes, revisions, practice, assessments, study sessions, metrics, and charts. |
+| `projects/` | Projects, milestones, notes, resources, important dates, activity, project-linked task views, metrics, and charts. |
+| `tasks/` | Task views, task analytics, and task-specific presentation. Persistence is currently owned by `src/services/taskRepository.js`. |
+| `settings/` | Preference schema/store, reminders, notifications, backups, import/export, and system information. |
 
-### Feature Structure Convention:
-Each feature directory contains:
-- `components/`: Components exclusive to this feature domain.
-- `data/`: Feature-specific models, persistence, metrics, and test fixtures.
-- `hooks/`: Feature-scoped React hooks managing feature logic and state subscriptions.
+## Module conventions
+
+- `components/`: feature-only presentation and interaction components.
+- `data/`: repository/store implementations, schemas, metrics, and data-focused tests.
+- `hooks/`: React subscriptions to feature repositories.
+- Keep relationships and validation in the data layer, not in visual components.
+- Keep cross-feature dashboard code read-only; mutations remain with the owning feature.
+- Do not duplicate stored progress. Derive it from the source records unless a historical snapshot model is deliberately added.

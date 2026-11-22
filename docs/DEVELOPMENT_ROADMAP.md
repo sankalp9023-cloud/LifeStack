@@ -1,57 +1,57 @@
 # LifeStack — Development Roadmap
 
-## Phase 0: Project Initialization & Architecture Setup (Current)
-- [x] Establish root project directory and clear domain boundaries.
-- [x] Configure frontend environment with React, Vite, and JavaScript (ES6+).
-- [x] Configure Tailwind CSS with futuristic design tokens and PostCSS.
-- [x] Install routing (`react-router-dom`) and modern icon library (`lucide-react`).
-- [x] Scaffold comprehensive folder hierarchy (`components`, `features`, `pages`, `layouts`, `services`).
-- [x] Document architecture, design guidelines, and roadmap.
-- [x] Verify build and development server execution.
+This roadmap describes current implementation status and the remaining backend sequence. The API stack and first-party auth direction are implemented; hosting and account recovery decisions remain open.
 
----
+## Current application
 
-## Phase 1: Frontend Dashboard & Neural Brain Visualization
-- [ ] Implement foundational top navigation toolbar (compact, translucent, non-sidebar).
-- [ ] Build central neural brain visualization canvas / SVG / Three.js element.
-- [ ] Construct organic, curved glassmorphism panel containers.
-- [ ] Arrange dashboard orbital widgets around the central brain.
-- [ ] Implement initial dashboard state hooks and mock data feeds.
+### Frontend foundation — implemented
 
----
+- [x] React, Vite, Tailwind CSS, routing, shared UI primitives, and feature boundaries.
+- [x] Responsive app shell using the available browser viewport and page-level scrolling.
+- [x] Navy/red tokens, frosted surfaces, and shared navigation and panel primitives.
 
-## Phase 2: Study Management Feature Module
-- [x] Build the Study page and functional section navigation.
-- [x] Create and edit subjects, chapters, and topics with derived completion progress.
-- [x] Track configurable lecture, reading, and practice requirements for topic completion.
-- [x] Add, edit, and organize locally persisted notes.
-- [x] Track revision history, practice sessions, study sessions, and tests/exams.
-- [x] Derive the Study dashboard and main dashboard progress panel from saved records.
-- [x] Add relationship validation, safe cascading deletion, and focused persistence tests.
+### Dashboard — implemented, iterative
 
----
+- [x] Summary panels connected to Study, Projects, Tasks, and reminder settings.
+- [x] Cross-module present-state progress graph and links to source sections.
+- [ ] Add more dense, actionable dashboard information such as due-soon tasks and recent module activity.
+- [ ] Review desktop, tablet, and mobile layouts in a browser and fix any clipping or cramped controls.
 
-## Phase 3: Project Management Feature Module
-- [ ] Build Project workspace views (Kanban board, list view, milestone timeline).
-- [ ] Implement task lifecycle management (create, update, complete, prioritize).
-- [ ] Add deadline indicators, progress arcs, and dependency tracking.
-- [ ] Sync project velocity metrics to the central dashboard.
+### Study — implemented
 
----
+- [x] Subject, chapter, topic, and learning activity management.
+- [x] Notes, revisions, practice sessions, assessments, and study session history.
+- [x] Derived subject/topic progress, topic completion pie chart, assessment and activity summaries.
+- [x] Versioned browser storage, relationship checks, safe deletion, and focused repository tests.
 
-## Phase 4: Settings & Personalization
-- [x] Central versioned preference schemas, validation, defaults, and persistence.
-- [x] General landing-page and date/time format preferences.
-- [x] Appearance and application-mode preference infrastructure.
-- [x] Central browser notification permissions, sound, Study reminders, and history.
-- [x] Privacy disclosures and app-wide validated export, import, backups, and restore.
-- [x] Module preference registration and system information.
+### Projects and Tasks — implemented, iterative
 
----
+- [x] Project and milestone management, notes, resources, important dates, and activity history.
+- [x] Project-linked and personal task management.
+- [x] Project status pie chart, project progress chart, deadline summaries, and task analytics.
+- [ ] Review project workflows and responsive project detail layouts.
 
-## Phase 5: Backend & Extended Life Modules (Future)
-- [ ] Evaluate backend requirements and select stack (Node.js/Go/Python/Supabase).
-- [ ] Database schema design and migration pipeline.
-- [ ] User authentication, synchronization, and cloud backup.
-- [ ] Develop Fitness Management module.
-- [ ] Develop Event Management & Calendar integration module.
+### Settings — implemented
+
+- [x] General, appearance, notifications, privacy, module settings, system information, and backup/import/export.
+- [x] Browser-local reminders for Study assessments and revisions.
+
+## Backend — foundation started
+
+- [x] Select the initial API stack: Node.js, TypeScript, and Fastify; PostgreSQL and Prisma are the persistence direction.
+- [ ] Confirm hosting, recovery/email verification, account deletion, and privacy choices before exposing private user data.
+- [ ] Document the API contract and final relational schema.
+- [x] Initialize the backend skeleton, environment configuration, and liveness health route.
+- [x] Add PostgreSQL connectivity and a reviewed SQL migration pipeline; map the full schema into Prisma before domain repositories.
+- [x] Implement initial email/password and Google authentication with opaque server-side sessions, plus owner-scoped Tasks APIs and core Projects/milestone operations.
+- [x] Add foundation, configuration, rate-limit, import-preview, migration-constraint, and build checks; other domain permission and transaction tests remain pending.
+- [ ] Import existing local data through a validated, idempotent migration flow.
+- [ ] Move the frontend behind API-backed repositories one feature at a time.
+- [ ] Add dashboard aggregates and decide later whether real-time synchronization is needed.
+
+See [Backend Plan](BACKEND_PLAN.md) and [Backend Data Model](BACKEND_DATA_MODEL.md) for the current proposal.
+
+## Future modules
+
+- [ ] Fitness tracking.
+- [ ] Calendar and event management.

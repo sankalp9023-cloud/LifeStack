@@ -65,7 +65,7 @@ export default function ProjectsDashboard({
               <div
                 key={`${item.type}-${item.id}`}
                 onClick={() => onSelectProject(item.projectId)}
-                className="flex items-center justify-between text-xs text-red-200 hover:text-white cursor-pointer py-1 border-b border-red-900/40 last:border-0"
+                className="flex items-center justify-between text-xs text-red-200 hover:text-white cursor-pointer py-1"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-red-900/50">
@@ -87,7 +87,7 @@ export default function ProjectsDashboard({
       <div className="project-activity-grid grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recently Updated Projects */}
         <div className="rounded border border-slate-800 bg-slate-900/50 p-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div className="flex items-center justify-between pb-2">
             <h3 className="text-sm font-semibold text-slate-100">Recently Updated Projects</h3>
             <button
               type="button"
@@ -131,7 +131,7 @@ export default function ProjectsDashboard({
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1 border-t border-slate-800/60">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
                     <span>Deadline: {p.deadline || 'None'}</span>
                     <span>Updated: {new Date(p.updatedAt || p.createdAt).toLocaleDateString()}</span>
                   </div>
@@ -143,7 +143,7 @@ export default function ProjectsDashboard({
 
         {/* Upcoming Deadlines (30 Days) */}
         <div className="rounded border border-slate-800 bg-slate-900/50 p-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+          <div className="flex items-center justify-between pb-2">
             <h3 className="text-sm font-semibold text-slate-100">Upcoming Deadlines (Next 30 Days)</h3>
             <span className="text-xs text-slate-400 font-mono">
               {metrics.upcomingDeadlines.length} items

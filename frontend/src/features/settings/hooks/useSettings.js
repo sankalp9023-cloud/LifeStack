@@ -17,7 +17,8 @@ function getStore() {
 
 const EMPTY_SETTINGS = {
   general: { defaultLandingPage: '/dashboard', dateFormat: 'locale', timeFormat: '24h' },
-  appearance: { theme: 'system', accentColor: 'blue', density: 'comfortable' },
+  appearance: { theme: 'dark', accentColor: 'blue', density: 'medium' },
+  profile: { displayName: 'Sam' },
   notifications: { enabled: false, soundEnabled: false, reminders: { enabled: false, leadHours: 24, reminderTime: '09:00' }, history: [] },
   applicationMode: 'simple',
   moduleSettings: {},

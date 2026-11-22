@@ -28,7 +28,7 @@ export default function ProjectForm({ project, onSubmit, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="rounded border border-slate-700 bg-slate-900/70 p-5 space-y-4">
-      <div className="border-b border-slate-700 pb-2">
+      <div className="pb-2">
         <h3 className="text-base font-semibold text-slate-100">
           {isEditing ? `Edit Project: ${project.name}` : 'Create New Project'}
         </h3>
@@ -116,7 +116,7 @@ export default function ProjectForm({ project, onSubmit, onCancel }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 pt-3 border-t border-slate-700">
+      <div className="flex items-center gap-2 pt-3">
         <button
           type="submit"
           className="rounded bg-blue-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-500"

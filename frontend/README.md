@@ -1,51 +1,42 @@
-# LifeStack — Frontend Application
+# LifeStack Frontend
 
-## Overview
+The frontend is a responsive React single-page application built with Vite, Tailwind CSS, React Router, and JavaScript. It is currently local-first and has no API dependency.
 
-The LifeStack client is built with **React**, **Vite**, **Tailwind CSS**, and modern JavaScript (ES6+). It provides a modular local-first personal management application.
-
-## Design Identity & Structure
-
-- **Navigation:** Compact top toolbar (`src/components/navigation/TopNavbar.jsx`). Left sidebar is strictly omitted.
-- **Dashboard:** Central neural core architecture with surrounding orbital glass panels.
-- **Styling:** Tailwind utility tokens augmented with specialized glassmorphism and organic curve styling rules in `src/styles/`.
-- **Modularity:** Isolated feature domains in `src/features/` (`dashboard`, `study`, `projects`).
-
-## Directory Layout
+## Source layout
 
 ```text
 src/
-├── assets/          # Static media bundled with the app
-├── components/      # Common primitives, navigation, panels, UI
-├── layouts/         # Base layout scaffolding (e.g. RootLayout)
-├── pages/           # Route views (Dashboard, Study, Projects, Settings)
-├── features/        # Feature modules with components, data, and hooks
-├── hooks/           # Global reusable React hooks
-├── context/         # Application-level contexts
-├── services/        # Service abstraction and data fetching
-├── utils/           # Utility functions
-├── constants/       # Global constants and route definitions
-├── styles/          # Tailwind setup and custom CSS effects
-└── routes/          # Application router configuration
+├── components/       # Shared navigation, panels, and UI primitives
+├── constants/        # Route and app constants
+├── context/          # Settings provider
+├── features/
+│   ├── dashboard/    # Cross-module summaries and progress graph
+│   ├── projects/     # Project UI, repository, metrics, charts
+│   ├── settings/     # Settings, reminders, backup and export
+│   ├── study/        # Study UI, repository, metrics, charts
+│   └── tasks/        # Task UI and analytics
+├── hooks/            # Shared data hooks (including task subscription)
+├── layouts/          # Responsive app shell
+├── pages/            # Route-level composition
+├── routes/           # React Router configuration
+├── services/         # Task persistence and service abstractions
+├── styles/           # Shared tokens and global primitives
+└── utils/            # Shared helpers
 ```
 
-## Available Scripts
+## Data boundary
 
-- `npm run dev`: Launch local Vite dev server on port `5173`.
-- `npm run build`: Compile production-ready bundle to `dist/`.
-- `npm run preview`: Preview production build locally.
-- `npm test`: Run the Node.js test suite.
+Each feature reads and mutates records through its repository/store and React hook. Components should not read `localStorage` directly. Dashboard components compose read-only feature hooks and derive cross-module summaries. Keep API transport behind the repository/service boundaries when the backend is introduced.
 
-## Study data
+Current storage keys are `lifestack.study.v1`, `lifestack.projects.v1`, `lifestack.tasks.v1`, and `lifestack.settings.v1`. Manual backups use `lifestack.backups.v1`. See [system architecture](../docs/ARCHITECTURE.md) and [backend migration plan](../docs/BACKEND_DATA_MODEL.md).
 
-The Study feature stores its normalized records in browser local storage under
-`lifestack.study.v1`. The versioned record contains subjects, chapters, topics,
-learning activities, notes, revision records, practice sessions, assessments,
-and study sessions. Study data is browser-local and is not synchronized to a
-server.
+## Commands
 
-The Settings feature stores validated preferences separately under
-`lifestack.settings.v1`. App backups cover Settings, Study, Projects, and Tasks;
-manual backups remain in this browser profile, while exports are downloadable
-JSON files. Browser reminders require the app to be open and desktop
-notification permission to be granted.
+- `npm run dev` — start Vite development server.
+- `npm run build` — build the production bundle.
+- `npm run preview` — preview the production bundle.
+- `npm test` — run the Node test suite.
+
+## Responsive layout
+
+`RootLayout` sizes the application to the dynamic browser viewport. Route pages fill available width and scroll their own content. Grids collapse at narrower widths; avoid fixed widths or viewport-height values based on an assumed navbar size.

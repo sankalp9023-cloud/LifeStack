@@ -9,6 +9,8 @@
   --study-navy-soft: var(--color-navy-accent-soft, rgba(60, 88, 132, 0.26));
   --study-red: var(--color-red-accent, #d06b79);
   --study-red-soft: var(--color-red-accent-soft, rgba(159, 49, 66, 0.18));
+  --study-edit-action: #b4c9ec;
+  --study-delete-action: #ff8e9c;
   color: var(--study-text);
 }
 
@@ -16,7 +18,8 @@
   padding: 1.1rem 1.3rem;
   border: 1px solid var(--study-border) !important;
   border-radius: 1.1rem;
-  background: linear-gradient(135deg, var(--study-glass-raised), rgba(8, 15, 27, 0.48));
+  background-color: var(--study-glass-raised);
+  background-image: var(--color-glass-overlay);
   box-shadow: var(--glass-highlight, inset 0 1px 0 rgba(222, 231, 246, 0.08)), 0 12px 30px rgba(0, 0, 0, 0.14);
   backdrop-filter: blur(var(--glass-blur, 20px));
   -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
@@ -28,12 +31,14 @@
   padding: 0.3rem;
   border: 1px solid var(--study-border);
   border-radius: 0.95rem;
-  background: rgba(10, 19, 34, 0.58);
+  background: var(--study-glass);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 
 .study-page .study-dashboard > section:first-child > div {
   border-radius: 1rem !important;
-  background-image: linear-gradient(145deg, rgba(48, 66, 96, 0.22), rgba(8, 15, 27, 0.2)) !important;
+  background-image: var(--color-glass-overlay) !important;
   transition: border-color 160ms ease, transform 160ms ease;
 }
 
@@ -45,7 +50,7 @@
 .study-page .study-chart-card {
   min-width: 0;
   border-radius: 1.15rem !important;
-  background-image: linear-gradient(145deg, rgba(35, 49, 73, 0.3), rgba(8, 15, 27, 0.2)) !important;
+  background-image: var(--color-glass-overlay) !important;
 }
 
 .study-page .study-progress-row {
@@ -61,7 +66,7 @@
   border: 1px solid var(--study-border) !important;
   border-radius: 1rem !important;
   background-color: var(--study-glass) !important;
-  background-image: linear-gradient(145deg, rgba(48, 66, 96, 0.23), rgba(8, 15, 27, 0.18) 72%) !important;
+  background-image: var(--color-glass-overlay) !important;
   box-shadow: var(--glass-highlight, inset 0 1px 0 rgba(222, 231, 246, 0.08)), 0 12px 34px rgba(0, 0, 0, 0.16);
   backdrop-filter: blur(var(--glass-blur, 20px)) saturate(120%);
   -webkit-backdrop-filter: blur(var(--glass-blur, 20px)) saturate(120%);
@@ -123,10 +128,14 @@
   color: #d7e2f4 !important;
 }
 
+.study-page .study-control-edit {
+  color: var(--study-edit-action) !important;
+}
+
 .study-page .study-control-delete,
 .study-page .text-red-300 {
-  border-color: rgba(208, 107, 121, 0.42) !important;
-  color: #f1b2ba !important;
+  border-color: color-mix(in srgb, var(--study-red) 52%, transparent) !important;
+  color: var(--study-delete-action) !important;
 }
 
 .study-page .study-control-delete:hover,
@@ -135,8 +144,8 @@
   background: var(--study-red-soft) !important;
 }
 
-.study-page .subject-detail-screen .study-control-delete { color: #f1b2ba !important; }
-.study-page .subject-detail-screen .study-control-edit,
+.study-page .subject-detail-screen .study-control-delete { color: var(--study-delete-action) !important; }
+.study-page .subject-detail-screen .study-control-edit { color: var(--study-edit-action) !important; }
 .study-page .subject-detail-screen .study-control-back { color: #d7e2f4 !important; }
 
 .study-page .study-subject-card > div > button:first-child {
@@ -165,13 +174,14 @@
 
 .study-page .bg-cyan-400 { background-color: var(--study-navy) !important; }
 
-.study-page .border-t,
-.study-page .divide-y > :not([hidden]) ~ :not([hidden]) {
-  border-color: var(--study-border) !important;
-}
 
 .study-page input[type="checkbox"],
 .study-page input[type="radio"] { accent-color: var(--study-navy); }
+
+html[data-theme="light"] .study-page {
+  --study-edit-action: #315d9b;
+  --study-delete-action: #ad354c;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .study-page .study-subject-card { transform: none; }

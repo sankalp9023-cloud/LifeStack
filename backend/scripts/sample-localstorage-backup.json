@@ -1,0 +1,114 @@
+{
+  "application": "LifeStack",
+  "formatVersion": 1,
+  "exportedAt": "2026-11-22T15:24:46.779Z",
+  "modules": {
+    "settings": {
+      "general": {
+        "defaultLandingPage": "/dashboard",
+        "dateFormat": "locale",
+        "timeFormat": "24h"
+      },
+      "appearance": {
+        "theme": "system",
+        "accentColor": "blue",
+        "density": "comfortable"
+      },
+      "notifications": {
+        "enabled": true,
+        "soundEnabled": false,
+        "reminders": {
+          "enabled": true,
+          "leadHours": 24,
+          "reminderTime": "09:00"
+        },
+        "history": []
+      },
+      "applicationMode": "simple",
+      "moduleSettings": {
+        "study": {
+          "remindersEnabled": true
+        }
+      }
+    },
+    "study": {
+      "subjects": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "name": "Mathematics",
+          "goal": "Core practice",
+          "description": "",
+          "createdAt": "2026-11-22T10:00:00.000Z"
+        }
+      ],
+      "chapters": [
+        {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "subjectId": "00000000-0000-4000-8000-000000000001",
+          "name": "Algebra",
+          "description": "",
+          "createdAt": "2026-11-22T10:00:00.000Z"
+        }
+      ],
+      "topics": [
+        {
+          "id": "00000000-0000-4000-8000-000000000003",
+          "chapterId": "00000000-0000-4000-8000-000000000002",
+          "name": "Linear equations",
+          "requirements": ["practice"],
+          "createdAt": "2026-11-22T10:00:00.000Z"
+        }
+      ],
+      "learningActivities": [],
+      "notes": [],
+      "revisions": [],
+      "practiceSessions": [],
+      "assessments": [],
+      "studySessions": []
+    },
+    "projects": {
+      "projects": [
+        {
+          "id": "00000000-0000-4000-8000-000000000004",
+          "name": "Migration check",
+          "description": "",
+          "category": "Personal Initiative",
+          "priority": "medium",
+          "status": "active",
+          "isArchived": false,
+          "startDate": "",
+          "deadline": "",
+          "createdAt": "2026-11-22T10:00:00.000Z",
+          "updatedAt": "2026-11-22T10:00:00.000Z"
+        }
+      ],
+      "milestones": [],
+      "notes": [],
+      "resources": [],
+      "importantDates": [],
+      "activities": []
+    },
+    "tasks": {
+      "tasks": [
+        {
+          "id": "00000000-0000-4000-8000-000000000005",
+          "title": "Verify importer",
+          "description": "",
+          "priority": "medium",
+          "status": "todo",
+          "completed": false,
+          "completedAt": null,
+          "dueDate": "",
+          "category": "",
+          "relatedModule": "",
+          "projectId": "00000000-0000-4000-8000-000000000004",
+          "milestoneId": "",
+          "tags": ["migration"],
+          "subtasks": [],
+          "createdAt": "2026-11-22T10:00:00.000Z",
+          "updatedAt": "2026-11-22T10:00:00.000Z"
+        }
+      ]
+    }
+  }
+}

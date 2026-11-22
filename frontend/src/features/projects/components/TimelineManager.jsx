@@ -94,7 +94,7 @@ export default function TimelineManager({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+      <div className="flex items-center justify-between pb-2">
         <div>
           <h3 className="text-lg font-semibold text-slate-100">Project Timeline & Deadlines</h3>
           <p className="text-xs text-slate-400">

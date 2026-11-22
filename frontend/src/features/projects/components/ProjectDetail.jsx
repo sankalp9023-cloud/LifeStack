@@ -96,7 +96,7 @@ export default function ProjectDetail({
   return (
     <div className="space-y-5">
       {/* Back button & Action Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
         <button
           type="button"
           onClick={onBack}
@@ -202,7 +202,7 @@ export default function ProjectDetail({
         </div>
 
         {/* Progress Bar & Summary Stats */}
-        <div className="border-t border-slate-800 pt-3 space-y-1.5">
+        <div className="pt-3 space-y-1.5">
           <div className="flex items-center justify-between text-xs text-slate-300">
             <span className="font-medium">Project Completion:</span>
             <span className="font-mono font-bold text-cyan-300">{metrics.overallProgress}%</span>
@@ -234,7 +234,7 @@ export default function ProjectDetail({
       </div>
 
       {/* Internal Structure Navigation Tabs */}
-      <nav className="flex flex-wrap gap-1.5 border-b border-slate-700 pb-2" aria-label="Project Structure Tabs">
+      <nav className="flex flex-wrap gap-1.5 pb-2" aria-label="Project Structure Tabs">
         {TABS.map(([id, label]) => {
           let badge = null;
           if (id === 'milestones') badge = projectMilestones.length;
@@ -340,7 +340,7 @@ export default function ProjectDetail({
                       .filter((a) => a.projectId === project.id)
                       .slice(0, 4)
                       .map((act) => (
-                        <div key={act.id} className="text-xs space-y-0.5 border-b border-slate-800/60 pb-1.5">
+                        <div key={act.id} className="text-xs space-y-0.5 pb-1.5">
                           <p className="text-slate-200">{act.description}</p>
                           <span className="text-[10px] font-mono text-slate-500">
                             {new Date(act.timestamp).toLocaleString()}
