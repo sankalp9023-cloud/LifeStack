@@ -5,13 +5,8 @@ import ProjectList from '@/features/projects/components/ProjectList';
 import ProjectDetail from '@/features/projects/components/ProjectDetail';
 import ProjectForm from '@/features/projects/components/ProjectForm';
 import FeaturePageHeader from '@/components/ui/FeaturePageHeader';
-import FeatureSectionNav from '@/components/ui/FeatureSectionNav';
 import Modal from '@/components/ui/Modal';
-
-const SECTIONS = [
-  ['projects', 'All Projects'],
-  ['archived', 'Archived'],
-];
+import '@/features/projects/projects.css';
 
 export default function ProjectsPage() {
   const {
@@ -27,7 +22,6 @@ export default function ProjectsPage() {
     error: storageError,
   } = useProjectData();
 
-  const [section, setSection] = useState('dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [error, setError] = useState(null);
@@ -57,6 +51,10 @@ export default function ProjectsPage() {
     setSelectedProjectId(null);
   };
 
+  const scrollToProjects = (id = 'active-projects-panel') => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const handleCreateSubmit = (input) => {
     let createdProject = null;
     const ok = run(() => {
@@ -71,8 +69,8 @@ export default function ProjectsPage() {
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
 
   return (
-    <div className="select-text flex-1 overflow-y-auto p-4 sm:p-6">
-      <div className="mx-auto max-w-6xl space-y-5">
+    <div className="projects-page select-text min-h-0 w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto w-full max-w-none space-y-5">
         <FeaturePageHeader
           title="Projects"
           description="Manage larger objectives, ongoing initiatives, software development, and milestones."
@@ -93,21 +91,6 @@ export default function ProjectsPage() {
           <p role="status" className="text-sm text-blue-300 font-medium">
             {notice}
           </p>
-        )}
-
-        {/* Top Section Navigation (shown when not viewing a single project detail) */}
-        {!selectedProject && (
-          <FeatureSectionNav
-            label="Projects sections"
-            activeId={section}
-            onChange={(id) => { setSection(id); setNotice(''); }}
-            items={SECTIONS.map(([id, label]) => ({
-              id,
-              label,
-              ...(id === 'projects' ? { count: projects.filter((project) => project.status !== 'archived').length } : {}),
-              ...(id === 'archived' ? { count: projects.filter((project) => project.status === 'archived').length } : {}),
-            }))}
-          />
         )}
 
         {/* Storage unavailable check */}
@@ -131,43 +114,63 @@ export default function ProjectsPage() {
             onSelectProject={handleSelectProject}
           />
         ) : (
-          <>
-            {section === 'dashboard' && (
+          <div className="space-y-6">
+            <section className="workspace-section-panel hud-surface rounded-2xl border border-slate-700/70 p-4 sm:p-5">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold">Project overview</h2>
+                  <p className="text-sm text-slate-400">Progress, activity, and upcoming deadlines.</p>
+                </div>
+                <button type="button" onClick={() => scrollToProjects()} className="text-sm text-navy-200 underline underline-offset-4">Browse projects</button>
+              </div>
               <ProjectsDashboard
                 projects={projects}
                 milestones={milestones}
                 tasks={tasks}
                 onSelectProject={handleSelectProject}
-                onViewAllProjects={() => setSection('projects')}
+                onViewAllProjects={() => scrollToProjects()}
               />
-            )}
+            </section>
 
-            {section === 'projects' && (
-              <ProjectList
-                projects={projects.filter((p) => p.status !== 'archived')}
-                milestones={milestones}
-                tasks={tasks}
-                onSelectProject={handleSelectProject}
-                onNewProject={() => setIsCreatingProject(true)}
-                repository={repository}
-                taskRepository={taskRepository}
-                run={run}
-              />
-            )}
+            <div className="grid min-w-0 gap-6 2xl:grid-cols-2">
+              <section id="active-projects-panel" className="workspace-section-panel hud-surface min-w-0 scroll-mt-6 rounded-2xl border border-slate-700/70 p-4 sm:p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold">All projects</h2>
+                    <p className="text-sm text-slate-400">{projects.filter((project) => project.status !== 'archived').length} active or planned</p>
+                  </div>
+                </div>
+                <ProjectList
+                  projects={projects.filter((p) => p.status !== 'archived')}
+                  milestones={milestones}
+                  tasks={tasks}
+                  onSelectProject={handleSelectProject}
+                  onNewProject={() => setIsCreatingProject(true)}
+                  repository={repository}
+                  taskRepository={taskRepository}
+                  run={run}
+                />
+              </section>
 
-            {section === 'archived' && (
-              <ProjectList
-                projects={projects.filter((p) => p.status === 'archived')}
-                milestones={milestones}
-                tasks={tasks}
-                onSelectProject={handleSelectProject}
-                onNewProject={() => setIsCreatingProject(true)}
-                repository={repository}
-                taskRepository={taskRepository}
-                run={run}
-              />
-            )}
-          </>
+              <section id="archived-projects-panel" className="workspace-section-panel hud-surface min-w-0 scroll-mt-6 rounded-2xl border border-slate-700/70 p-4 sm:p-5">
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold">Archived projects</h2>
+                  <p className="text-sm text-slate-400">{projects.filter((project) => project.status === 'archived').length} archived</p>
+                </div>
+                <ProjectList
+                  projects={projects.filter((p) => p.status === 'archived')}
+                  milestones={milestones}
+                  tasks={tasks}
+                  onSelectProject={handleSelectProject}
+                  onNewProject={() => setIsCreatingProject(true)}
+                  repository={repository}
+                  taskRepository={taskRepository}
+                  run={run}
+                  initialStatusFilter="archived"
+                />
+              </section>
+            </div>
+          </div>
         )}
         <Modal open={isCreatingProject} title="Create project" onClose={() => setIsCreatingProject(false)}>
           <ProjectForm onSubmit={handleCreateSubmit} onCancel={() => setIsCreatingProject(false)} />

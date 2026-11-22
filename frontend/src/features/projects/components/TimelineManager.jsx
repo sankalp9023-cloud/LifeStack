@@ -114,7 +114,6 @@ export default function TimelineManager({
 
       <Modal open={showAddDateForm} title="Add important date" onClose={() => setShowAddDateForm(false)}>
         <form onSubmit={handleAddDate} className="space-y-3">
-          <h4 className="text-sm font-semibold text-slate-200">Add Checkpoint / Important Date</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-300">Label / Event Name *</label>

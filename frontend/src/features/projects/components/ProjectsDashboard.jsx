@@ -1,5 +1,6 @@
 import React from 'react';
 import { calculateDashboardMetrics } from '../data/projectMetrics.js';
+import ProjectAnalytics from './ProjectAnalytics';
 
 export default function ProjectsDashboard({
   projects = [],
@@ -11,49 +12,51 @@ export default function ProjectsDashboard({
   const metrics = calculateDashboardMetrics(projects, milestones, tasks);
 
   return (
-    <div className="space-y-6">
+    <div className="projects-dashboard space-y-6">
       {/* Top Metrics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="hud-surface rounded border border-slate-800 bg-slate-900/60 p-3.5 space-y-1">
+      <div className="project-stat-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="project-stat-card hud-surface rounded border border-slate-800 bg-slate-900/60 p-3.5 space-y-1">
           <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Total</span>
           <div className="text-2xl font-bold text-slate-100">{metrics.totalProjects}</div>
           <span className="text-[10px] text-slate-500">Non-archived</span>
         </div>
 
-        <div className="hud-surface rounded border border-blue-900/40 bg-blue-950/20 p-3.5 space-y-1">
+        <div className="project-stat-card hud-surface rounded border border-blue-900/40 bg-blue-950/20 p-3.5 space-y-1">
           <span className="text-[11px] font-medium text-blue-300 uppercase tracking-wider">Active</span>
           <div className="text-2xl font-bold text-blue-200">{metrics.activeProjects}</div>
           <span className="text-[10px] text-blue-400">In progress</span>
         </div>
 
-        <div className="hud-surface rounded border border-blue-900/40 bg-blue-950/20 p-3.5 space-y-1">
+        <div className="project-stat-card hud-surface rounded border border-blue-900/40 bg-blue-950/20 p-3.5 space-y-1">
           <span className="text-[11px] font-medium text-blue-300 uppercase tracking-wider">Completed</span>
           <div className="text-2xl font-bold text-blue-200">{metrics.completedProjects}</div>
           <span className="text-[10px] text-blue-400">Finished</span>
         </div>
 
-        <div className="hud-surface rounded border border-blue-900/40 bg-blue-950/20 p-3.5 space-y-1">
+        <div className="project-stat-card hud-surface rounded border border-blue-900/40 bg-blue-950/20 p-3.5 space-y-1">
           <span className="text-[11px] font-medium text-blue-300 uppercase tracking-wider">On Hold</span>
           <div className="text-2xl font-bold text-blue-200">{metrics.onHoldProjects}</div>
           <span className="text-[10px] text-blue-400">Paused</span>
         </div>
 
-        <div className="hud-surface rounded border border-slate-800 bg-slate-900/60 p-3.5 space-y-1">
+        <div className="project-stat-card hud-surface rounded border border-slate-800 bg-slate-900/60 p-3.5 space-y-1">
           <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Not Started</span>
           <div className="text-2xl font-bold text-slate-200">{metrics.notStartedProjects}</div>
           <span className="text-[10px] text-slate-500">Planned</span>
         </div>
 
-        <div className="hud-surface rounded border border-cyan-900/40 bg-cyan-950/20 p-3.5 space-y-1">
+        <div className="project-stat-card hud-surface rounded border border-cyan-900/40 bg-cyan-950/20 p-3.5 space-y-1">
           <span className="text-[11px] font-medium text-cyan-300 uppercase tracking-wider">Avg Progress</span>
           <div className="text-2xl font-bold text-cyan-200">{metrics.averageActiveProgress}%</div>
           <span className="text-[10px] text-cyan-400">Active initiatives</span>
         </div>
       </div>
 
+      <ProjectAnalytics projects={projects} milestones={milestones} tasks={tasks} onSelectProject={onSelectProject} />
+
       {/* Overdue Items Alert (if any) */}
       {metrics.overdueItems.length > 0 && (
-        <div className="rounded border border-red-800/80 bg-red-950/30 p-4 space-y-2">
+        <div className="project-overdue-alert rounded border border-red-800/80 bg-red-950/30 p-4 space-y-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-red-300">
             <span>⚠ Overdue Items ({metrics.overdueItems.length})</span>
           </div>
@@ -81,7 +84,7 @@ export default function ProjectsDashboard({
       )}
 
       {/* Main Grid: Recently Updated & Upcoming Deadlines */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="project-activity-grid grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recently Updated Projects */}
         <div className="rounded border border-slate-800 bg-slate-900/50 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2">

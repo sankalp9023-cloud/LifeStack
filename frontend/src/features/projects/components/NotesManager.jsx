@@ -76,9 +76,6 @@ export default function NotesManager({ project, notes = [], repository, run }) {
 
       <Modal open={showAddForm} title={editingNote ? 'Edit note' : 'Add project note'} onClose={resetForm}>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <h4 className="text-sm font-semibold text-slate-200">
-            {editingNote ? 'Edit Note' : 'New Project Note'}
-          </h4>
           <div>
             <label className="block text-xs font-medium text-slate-300">Title *</label>
             <input

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -22,8 +22,7 @@ const SETTINGS_LINKS = [
   ['system', 'System information'],
 ];
 
-export default function TopNavbar({ onOpenProfileDialog }) {
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+export default function TopNavbar({ onOpenProfileDialog, profileMenuOpen, setProfileMenuOpen }) {
   const profileMenuRef = useRef(null);
 
   useEffect(() => {
@@ -58,7 +57,7 @@ export default function TopNavbar({ onOpenProfileDialog }) {
 
   return (
     <header className="relative z-40 flex w-full items-center justify-center border-0 bg-transparent px-4 py-2.5">
-      <nav className="hud-nav px-1.5 py-1 flex items-center gap-1 shadow-glass">
+      <nav className="hud-nav px-1.5 py-1 flex items-center gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -98,7 +97,7 @@ export default function TopNavbar({ onOpenProfileDialog }) {
           </button>
 
           {profileMenuOpen && (
-            <div className="absolute right-0 top-full z-50 mt-2 max-h-[calc(100vh-5rem)] w-72 overflow-y-auto rounded-xl border border-slate-700 bg-slate-950/95 p-2 shadow-2xl shadow-black/50 backdrop-blur-xl">
+            <div className="profile-menu absolute right-0 top-full z-50 mt-2 max-h-[calc(100vh-5rem)] w-72 overflow-y-auto rounded-xl p-2">
               <button
                 type="button"
                 onClick={() => openProfileDialog('profile')}

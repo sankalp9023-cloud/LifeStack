@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { ArrowLeft, X } from 'lucide-react';
 import packageInfo from '../../../package.json';
 import useSettings from '@/features/settings/hooks/useSettings';
 import {
@@ -26,24 +27,9 @@ const SECTIONS = [
   ['system', 'System information'],
 ];
 
-const SECTION_TITLES = {
-  profile: 'Profile',
-  general: 'General',
-  appearance: 'Appearance',
-  notifications: 'Notifications',
-  modules: 'Modules',
-  privacy: 'Privacy',
-  data: 'Data management',
-  system: 'System information',
-  logout: 'Log out',
-  deleteAccount: 'Delete account',
-  terms: 'Terms & Conditions',
-  about: 'About LifeStack',
-};
-
 const FIELD_CLASS = 'mt-1 w-full rounded border border-slate-600 bg-slate-950 p-2 text-sm';
 
-export default function SettingsPage({ dialogMode = false, dialogSection, onClose }) {
+export default function SettingsPage({ dialogMode = false, dialogSection, onClose, onBackToMenu }) {
   const { settings, settingsStore, error: storageError } = useSettings();
   const [searchParams] = useSearchParams();
   const requestedSection = searchParams.get('section');
@@ -89,15 +75,25 @@ export default function SettingsPage({ dialogMode = false, dialogSection, onClos
   };
 
   return (
-    <div className={`select-text ${dialogMode ? 'h-full overflow-y-auto p-4' : 'flex-1 overflow-y-auto p-4 sm:p-6'}`}>
-      <div className={`${dialogMode ? 'space-y-4' : 'mx-auto max-w-6xl space-y-5'}`}>
+    <div className={`select-text min-w-0 ${dialogMode ? 'h-full w-full overflow-y-auto p-4' : 'min-h-0 w-full flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8'}`}>
+      <div className={`${dialogMode ? 'space-y-4' : 'mx-auto w-full max-w-none space-y-5'}`}>
         {dialogMode ? (
           <header className="flex items-start justify-between gap-3 border-b border-slate-700 pb-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-cyan-400">LifeStack / Profile</p>
-              <h2 className="mt-1 text-xl font-semibold text-slate-100">{SECTION_TITLES[section] || 'Settings'}</h2>
+            <div className="min-w-0">
+              {onBackToMenu && (
+                <button
+                  type="button"
+                  onClick={onBackToMenu}
+                  className="mb-2 flex items-center gap-1.5 text-xs font-medium text-cyan-300 hover:text-cyan-200"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Back to settings menu
+                </button>
+              )}
             </div>
-            <button type="button" aria-label="Close profile panel" onClick={onClose} className="rounded px-2 py-1 text-xl leading-none text-slate-400 hover:bg-slate-800 hover:text-white">×</button>
+            <button type="button" aria-label="Close profile and settings panel" onClick={onClose} className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white">
+              <X className="h-5 w-5" />
+            </button>
           </header>
         ) : (
           <FeaturePageHeader

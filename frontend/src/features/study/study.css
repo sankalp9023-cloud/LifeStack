@@ -1,0 +1,178 @@
+.study-page {
+  --study-glass: var(--color-glass, rgba(15, 27, 47, 0.62));
+  --study-glass-raised: var(--color-glass-raised, rgba(21, 36, 60, 0.72));
+  --study-border: var(--color-border, rgba(160, 177, 207, 0.16));
+  --study-border-strong: var(--color-border-strong, rgba(174, 190, 218, 0.26));
+  --study-text: var(--color-text, #f2f5fb);
+  --study-muted: var(--color-text-muted, #a7b3c8);
+  --study-navy: var(--color-navy-accent, #7893bd);
+  --study-navy-soft: var(--color-navy-accent-soft, rgba(60, 88, 132, 0.26));
+  --study-red: var(--color-red-accent, #d06b79);
+  --study-red-soft: var(--color-red-accent-soft, rgba(159, 49, 66, 0.18));
+  color: var(--study-text);
+}
+
+.study-page .hud-page-header {
+  padding: 1.1rem 1.3rem;
+  border: 1px solid var(--study-border) !important;
+  border-radius: 1.1rem;
+  background: linear-gradient(135deg, var(--study-glass-raised), rgba(8, 15, 27, 0.48));
+  box-shadow: var(--glass-highlight, inset 0 1px 0 rgba(222, 231, 246, 0.08)), 0 12px 30px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(var(--glass-blur, 20px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
+}
+
+.study-page .hud-section-nav {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.3rem;
+  border: 1px solid var(--study-border);
+  border-radius: 0.95rem;
+  background: rgba(10, 19, 34, 0.58);
+}
+
+.study-page .study-dashboard > section:first-child > div {
+  border-radius: 1rem !important;
+  background-image: linear-gradient(145deg, rgba(48, 66, 96, 0.22), rgba(8, 15, 27, 0.2)) !important;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.study-page .study-dashboard > section:first-child > div:hover {
+  border-color: var(--study-border-strong) !important;
+  transform: translateY(-2px);
+}
+
+.study-page .study-chart-card {
+  min-width: 0;
+  border-radius: 1.15rem !important;
+  background-image: linear-gradient(145deg, rgba(35, 49, 73, 0.3), rgba(8, 15, 27, 0.2)) !important;
+}
+
+.study-page .study-progress-row {
+  padding: 0.15rem 0;
+}
+
+.study-page .hud-page-header,
+.study-page .hud-surface,
+.study-page .study-subject-card,
+.study-page .study-chapter-card,
+.study-page .subject-detail-screen .rounded.bg-slate-900,
+.study-page .subject-detail-screen li {
+  border: 1px solid var(--study-border) !important;
+  border-radius: 1rem !important;
+  background-color: var(--study-glass) !important;
+  background-image: linear-gradient(145deg, rgba(48, 66, 96, 0.23), rgba(8, 15, 27, 0.18) 72%) !important;
+  box-shadow: var(--glass-highlight, inset 0 1px 0 rgba(222, 231, 246, 0.08)), 0 12px 34px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(var(--glass-blur, 20px)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-blur, 20px)) saturate(120%);
+}
+
+.study-page .study-subject-card {
+  min-height: 10rem;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.study-page .study-subject-card:hover,
+.study-page .study-chapter-card:hover {
+  border-color: var(--study-border-strong) !important;
+  background-color: var(--study-glass-raised) !important;
+}
+
+.study-page .study-subject-card:hover {
+  transform: translateY(-2px);
+}
+
+.study-page .subject-detail-screen > div:first-child {
+  padding: 1rem;
+  border: 1px solid var(--study-border);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, var(--study-glass-raised), rgba(9, 17, 31, 0.68));
+  box-shadow: var(--glass-highlight, inset 0 1px 0 rgba(222, 231, 246, 0.08));
+  backdrop-filter: blur(var(--glass-blur, 20px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
+}
+
+.study-page .study-control,
+.study-page button.rounded.border,
+.study-page button[class*="border-sky"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--study-border-strong) !important;
+  border-radius: 0.7rem;
+  background: var(--study-navy-soft) !important;
+  color: var(--study-text) !important;
+  font-weight: 550;
+  text-decoration: none;
+  box-shadow: var(--glass-highlight, inset 0 1px 0 rgba(222, 231, 246, 0.08));
+  transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+}
+
+.study-page .study-control:hover,
+.study-page button.rounded.border:hover,
+.study-page button[class*="border-sky"]:hover {
+  border-color: var(--study-navy) !important;
+  background: rgba(60, 88, 132, 0.42) !important;
+}
+
+.study-page .study-control-back,
+.study-page .study-control-edit {
+  color: #d7e2f4 !important;
+}
+
+.study-page .study-control-delete,
+.study-page .text-red-300 {
+  border-color: rgba(208, 107, 121, 0.42) !important;
+  color: #f1b2ba !important;
+}
+
+.study-page .study-control-delete:hover,
+.study-page button.text-red-300:hover {
+  border-color: var(--study-red) !important;
+  background: var(--study-red-soft) !important;
+}
+
+.study-page .subject-detail-screen .study-control-delete { color: #f1b2ba !important; }
+.study-page .subject-detail-screen .study-control-edit,
+.study-page .subject-detail-screen .study-control-back { color: #d7e2f4 !important; }
+
+.study-page .study-subject-card > div > button:first-child {
+  width: 100%;
+  justify-content: flex-start;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.study-page .study-subject-card > div > div button,
+.study-page .study-chapter-card button:not(.rounded),
+.study-page .subject-detail-screen button:not(.rounded) {
+  color: var(--study-muted);
+}
+
+.study-page .subject-detail-screen button:not(.rounded):hover,
+.study-page .study-chapter-card button:not(.rounded):hover {
+  color: var(--study-text);
+}
+
+.study-page .text-cyan-300,
+.study-page .text-cyan-200,
+.study-page .text-sky-300,
+.study-page .text-blue-300 { color: #c4d3ea !important; }
+
+.study-page .bg-cyan-400 { background-color: var(--study-navy) !important; }
+
+.study-page .border-t,
+.study-page .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--study-border) !important;
+}
+
+.study-page input[type="checkbox"],
+.study-page input[type="radio"] { accent-color: var(--study-navy); }
+
+@media (prefers-reduced-motion: reduce) {
+  .study-page .study-subject-card { transform: none; }
+}

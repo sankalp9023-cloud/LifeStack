@@ -1,6 +1,7 @@
 import React from 'react';
 import { getStudyDashboard } from '../data/studyMetrics';
 import { formatSettingsDate } from '@/features/settings/data/settingsFormatters';
+import StudyAnalytics from './StudyAnalytics';
 
 function formatDate(value, settings) {
   if (!value) return 'No date';
@@ -18,13 +19,15 @@ export default function StudyDashboard({ data, settings, onNavigate }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="study-dashboard space-y-6">
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Study summary">
         <Summary label="Subjects" value={dashboard.subjectCount} />
         <Summary label="Overall progress" value={`${dashboard.progress}%`} detail={`${dashboard.completedTopics} of ${dashboard.topicCount} topics`} />
         <Summary label="Completed chapters" value={dashboard.completedChapters} detail={`${dashboard.pendingChapters} pending`} />
         <Summary label="Pending revisions" value={dashboard.pendingRevisions.length} />
       </section>
+
+      <StudyAnalytics data={data} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="hud-surface rounded border border-slate-800 bg-slate-900/50 p-4">

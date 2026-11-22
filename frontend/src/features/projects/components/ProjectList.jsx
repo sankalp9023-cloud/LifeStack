@@ -14,9 +14,10 @@ export default function ProjectList({
   repository,
   taskRepository,
   run,
+  initialStatusFilter = 'all',
 }) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter);
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   const filteredProjects = projects.filter((p) => {
@@ -74,7 +75,7 @@ export default function ProjectList({
   return (
     <div className="space-y-4">
       {/* Search and Filters Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/50 p-3 rounded border border-slate-800">
+      <div className="project-filter-bar flex flex-wrap items-center justify-between gap-3 bg-slate-900/50 p-3 rounded border border-slate-800">
         <div className="flex-1 min-w-[200px]">
           <input
             type="text"
@@ -142,7 +143,7 @@ export default function ProjectList({
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="project-list-grid grid gap-4 lg:grid-cols-2">
           {filteredProjects.map((project) => {
             const metrics = calculateProjectMetrics(project, milestones, tasks);
             const daysDiff = getDaysDiff(project.deadline);
@@ -151,7 +152,7 @@ export default function ProjectList({
               <div
                 key={project.id}
                 onClick={() => onSelectProject(project.id)}
-                className="rounded border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer space-y-3"
+                className="project-list-card rounded border border-slate-800 bg-slate-900/40 p-4 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer space-y-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="space-y-1">

@@ -1,60 +1,30 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import CornerPanel from '@/components/panels/CornerPanel';
+import useProjectData from '@/features/projects/hooks/useProjectData';
+import { calculateDashboardMetrics } from '@/features/projects/data/projectMetrics';
 
 export default function ProjectsOverviewPanel({ className = '' }) {
+  const { projects, milestones, tasks } = useProjectData();
+  const metrics = calculateDashboardMetrics(projects, milestones, tasks);
   return (
     <CornerPanel
       title="Venture Flux"
       subtitle="Projects"
       showAction={true}
-      className={`panel-top-right w-full sm:w-[280px] md:w-[310px] h-[230px] ${className}`}
+      className={`panel-top-right w-full min-w-0 h-[230px] ${className}`}
+      bodyClassName="items-center justify-center"
     >
-      <div className="relative w-full h-full flex items-center justify-center py-1">
-        {/* Luminous Liquid 3D Orb matching reference */}
-        <div className="relative w-40 h-40 flex items-center justify-center">
-          {/* Ambient Glow */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-blue-500/20 via-red-500/10 to-transparent blur-2xl pointer-events-none" />
-
-          {/* Liquid Outer Morphing Ring */}
-          <div
-            className="absolute inset-1 border border-blue-300/45 rounded-full opacity-85 pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(circle at 32% 28%, rgba(39, 186, 255, 0.24) 0%, rgba(255, 64, 88, 0.12) 55%, rgba(3, 12, 25, 0.7) 100%)',
-              boxShadow:
-                'inset 0 0 24px rgba(39, 186, 255, 0.18), 0 0 20px rgba(39, 186, 255, 0.1)',
-            }}
-          />
-
-          {/* Secondary Counter-Rotating Wave Silhouette */}
-          <div
-            className="absolute inset-3 border border-red-300/20 rounded-full opacity-60 pointer-events-none"
-            style={{
-              animationDirection: 'reverse',
-              animationDuration: '14s',
-              background:
-                'radial-gradient(circle at 68% 68%, rgba(255, 64, 88, 0.16) 0%, transparent 60%)',
-            }}
-          />
-
-          {/* Tertiary Subtle Depth Ring */}
-          <div className="absolute inset-6 rounded-full border border-blue-300/20 pointer-events-none" />
-
-          {/* Central Stat Counter */}
-          <div className="relative z-10 text-center flex flex-col items-center justify-center drop-shadow-lg">
-            <span className="text-3xl font-extrabold tracking-tight bg-gradient-to-b from-white via-blue-100 to-blue-300 bg-clip-text text-transparent">
-              32+
-            </span>
-            <span className="text-[11.5px] font-semibold tracking-wider text-slate-300/90 uppercase mt-0.5">
-              Projects
-            </span>
-          </div>
-
-          {/* Specular glass reflection highlights */}
-          <div className="absolute top-4 left-6 w-9 h-4 rounded-full bg-white/30 blur-[2px] rotate-[-28deg] pointer-events-none" />
-        </div>
+      <div className="relative flex h-36 w-36 items-center justify-center rounded-full border border-navy-300/20 bg-navy-800/20 shadow-[inset_0_1px_18px_rgba(154,172,201,0.08)]">
+        <div className="absolute inset-3 rounded-full border border-navy-200/10" />
+        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_28%,rgba(154,172,201,0.14),transparent_62%)]" />
+        <Link to="/projects" className="relative text-center">
+          <span className="block text-3xl font-semibold tracking-tight text-slate-100">{metrics.totalProjects}</span>
+          <span className="mt-1 block text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">Projects</span>
+          <span className="mx-auto mt-2 block h-0.5 w-6 rounded-full bg-red-400/70" />
+          <span className="mt-2 block text-[10px] text-slate-400">{metrics.activeProjects} active · {metrics.completedProjects} complete</span>
+        </Link>
       </div>
     </CornerPanel>
   );
 }
-

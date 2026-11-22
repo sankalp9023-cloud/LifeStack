@@ -1,0 +1,120 @@
+.app-shell.projects-shell {
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(35, 57, 91, 0.16), transparent 38%),
+    radial-gradient(ellipse at 92% 82%, rgba(105, 34, 49, 0.09), transparent 32%),
+    var(--color-canvas);
+}
+
+.projects-page {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+}
+
+.projects-page > div {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: none;
+}
+
+.projects-page .hud-page-header {
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--color-border, rgba(160, 177, 207, 0.16)) !important;
+  border-radius: 1.15rem;
+  background: linear-gradient(135deg, rgba(21, 36, 60, 0.7), rgba(8, 15, 27, 0.5));
+  box-shadow: inset 0 1px 0 rgba(222, 231, 246, 0.07), 0 12px 30px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.projects-page .hud-section-nav {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.3rem;
+  border: 1px solid var(--color-border, rgba(160, 177, 207, 0.16));
+  border-radius: 0.95rem;
+  background: rgba(10, 19, 34, 0.58);
+}
+
+.projects-page .projects-dashboard,
+.projects-page .project-analytics,
+.projects-page .project-chart-card,
+.projects-page .project-stat-card {
+  min-width: 0;
+}
+
+.projects-page .project-stat-card {
+  border-radius: 1rem !important;
+  background-image: linear-gradient(145deg, rgba(48, 66, 96, 0.21), rgba(8, 15, 27, 0.2)) !important;
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.projects-page .project-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong, rgba(174, 190, 218, 0.26)) !important;
+}
+
+.projects-page .project-chart-card {
+  border-radius: 1.15rem !important;
+  background-image: linear-gradient(145deg, rgba(35, 49, 73, 0.3), rgba(8, 15, 27, 0.2)) !important;
+}
+
+.projects-page .project-progress-row {
+  transition: background-color 140ms ease;
+}
+
+.projects-page .project-progress-row:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.projects-page .project-progress-row:focus-visible {
+  outline: 2px solid var(--color-navy-accent, #7893bd);
+  outline-offset: 2px;
+}
+
+.projects-page .project-filter-bar {
+  border-color: var(--color-border, rgba(160, 177, 207, 0.16));
+  border-radius: 1rem;
+  background: rgba(12, 21, 37, 0.62);
+  padding: 0.9rem;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.projects-page .project-list-card {
+  border-color: var(--color-border, rgba(160, 177, 207, 0.16));
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgba(21, 36, 60, 0.52), rgba(8, 15, 27, 0.38));
+  transition: border-color 150ms ease, transform 150ms ease, background-color 150ms ease;
+}
+
+.projects-page .project-list-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-strong, rgba(174, 190, 218, 0.26));
+}
+
+.projects-page .project-list-grid > * { min-width: 0; }
+
+.projects-page .project-activity-grid > div {
+  border-color: var(--color-border, rgba(160, 177, 207, 0.16));
+  border-radius: 1rem;
+  background: rgba(12, 21, 37, 0.54);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.projects-page .project-activity-grid > div > div[class*="rounded border"] {
+  border-radius: 0.8rem;
+  background: rgba(21, 36, 60, 0.42);
+}
+
+.projects-page input,
+.projects-page select {
+  min-height: 2.4rem;
+  border-radius: 0.7rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-page .project-stat-card:hover { transform: none; }
+}

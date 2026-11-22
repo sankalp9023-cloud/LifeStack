@@ -84,9 +84,6 @@ export default function ResourcesManager({ project, resources = [], repository, 
 
       <Modal open={showAddForm} title={editingResource ? 'Edit resource' : 'Add project resource'} onClose={resetForm}>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <h4 className="text-sm font-semibold text-slate-200">
-            {editingResource ? 'Edit Resource' : 'Add Project Resource'}
-          </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-300">Name *</label>

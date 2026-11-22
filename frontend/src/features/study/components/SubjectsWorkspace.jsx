@@ -36,7 +36,6 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
     <div className="space-y-6">
       <Modal open={showSubjectForm} title="Add subject" onClose={() => setShowSubjectForm(false)}>
       <form className="space-y-3" onSubmit={saveSubject}>
-        <h2 className="font-semibold">Add subject</h2>
         <div className="grid gap-3 md:grid-cols-3">
           <label className="text-sm">Name
             <input required value={subjectForm.name} onChange={(event) => setSubjectForm({ ...subjectForm, name: event.target.value })} className="mt-1 w-full rounded border border-slate-600 bg-slate-950 p-2" />
@@ -52,13 +51,12 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
       </form></Modal>
 
       {!selectedSubject && <section>
-        <h2 className="mb-3 font-semibold">Subjects</h2>
         {data.subjects.length === 0 && <p className="mb-3 text-sm text-slate-400">No subjects yet. Add a subject to begin organizing your study.</p>}
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {data.subjects.map((subject) => {
               const progress = getSubjectProgress(data, subject.id);
               return (
-                <li key={subject.id} className="min-w-0 border border-slate-700 bg-slate-950/30 p-4 transition-colors hover:border-sky-500/50">
+                <li key={subject.id} className="study-subject-card min-w-0 border border-slate-700 bg-slate-950/30 p-4 transition-colors hover:border-sky-500/50">
                   <div className="flex min-h-36 flex-col">
                     <button type="button" className="flex flex-1 flex-col items-start justify-between gap-4 text-left" onClick={() => selectSubject(subject)}>
                       <span className="text-base font-semibold text-slate-100">{subject.name}</span>
@@ -69,8 +67,8 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
                     </button>
                     {subject.goal && <p className="mt-2 text-sm text-slate-400">Goal: {subject.goal}</p>}
                     <div className="mt-3 flex gap-3 border-t border-slate-700/70 pt-2 text-xs">
-                      <button type="button" className="text-slate-300 underline hover:text-white" onClick={() => { selectSubject(subject); setEditForm({ name: subject.name, goal: subject.goal || '', description: subject.description || '' }); setShowSubjectEdit(true); }}>Edit</button>
-                      <button type="button" className="text-red-300 underline hover:text-red-200" onClick={() => {
+                      <button type="button" className="study-control study-control-edit" onClick={() => { selectSubject(subject); setEditForm({ name: subject.name, goal: subject.goal || '', description: subject.description || '' }); setShowSubjectEdit(true); }}>Edit</button>
+                      <button type="button" className="study-control study-control-delete" onClick={() => {
                         if (window.confirm(`Delete ${subject.name} and its chapters, topics, notes, practice, and assessments?`)) {
                           if (run(() => repository.deleteSubject(subject.id)) && selectedId === subject.id) setSelectedId('');
                         }
@@ -92,14 +90,14 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
         <section className="subject-detail-screen min-h-full space-y-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <button type="button" className="mb-3 text-sm text-blue-300 underline hover:text-blue-200" onClick={() => setSelectedId('')}>← Back to subjects</button>
+              <button type="button" className="study-control study-control-back mb-3 text-sm" onClick={() => setSelectedId('')}>← Back to subjects</button>
               <h2 className="text-lg font-semibold">{selectedSubject.name}</h2>
               {selectedSubject.description && <p className="mt-1 text-sm text-slate-400">{selectedSubject.description}</p>}
               {selectedSubject.goal && <p className="mt-1 text-sm text-slate-400">Goal: {selectedSubject.goal}</p>}
             </div>
-            <div className="flex gap-3 text-sm">
-              <button type="button" className="text-blue-300 underline" onClick={() => { setEditForm({ name: selectedSubject.name, goal: selectedSubject.goal || '', description: selectedSubject.description || '' }); setShowSubjectEdit(true); }}>Edit subject</button>
-              <button type="button" className="text-red-300 underline" onClick={() => {
+            <div className="flex flex-wrap gap-2 text-sm">
+              <button type="button" className="study-control study-control-edit" onClick={() => { setEditForm({ name: selectedSubject.name, goal: selectedSubject.goal || '', description: selectedSubject.description || '' }); setShowSubjectEdit(true); }}>Edit subject</button>
+              <button type="button" className="study-control study-control-delete" onClick={() => {
                 if (window.confirm(`Delete ${selectedSubject.name} and its chapters, topics, notes, practice, and assessments?`)) {
                   if (run(() => repository.deleteSubject(selectedId))) setSelectedId('');
                 }
@@ -166,7 +164,7 @@ function ChapterCard({ chapter, data, repository, run, onAddNote }) {
     : [...current, type]);
 
   return (
-    <article className="space-y-3 rounded border border-slate-700 p-3">
+    <article className="study-chapter-card space-y-3 rounded border border-slate-700 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {editing ? (
           <form className="flex gap-2" onSubmit={(event) => {

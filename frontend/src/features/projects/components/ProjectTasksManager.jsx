@@ -147,7 +147,6 @@ export default function ProjectTasksManager({
       {/* Assign Existing Task Modal / Inline form */}
       <Modal open={showAssignModal} title="Assign existing task" onClose={() => setShowAssignModal(false)}>
         <form onSubmit={handleAssignTask} className="space-y-2">
-          <h4 className="text-xs font-semibold text-blue-200">Assign Existing Task from Global Engine</h4>
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={selectedUnassignedId}
@@ -182,7 +181,6 @@ export default function ProjectTasksManager({
       {/* New Task Form */}
       <Modal open={showAddForm} title="Create task for this project" onClose={resetForm}>
         <form onSubmit={handleCreateTask} className="space-y-3">
-          <h4 className="text-sm font-semibold text-slate-200">Create Task for this Project</h4>
           <div>
             <label className="block text-xs font-medium text-slate-300">Title *</label>
             <input

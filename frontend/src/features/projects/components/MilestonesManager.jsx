@@ -91,9 +91,6 @@ export default function MilestonesManager({
 
       <Modal open={showAddForm} title={editingMilestone ? 'Edit milestone' : 'Add milestone'} onClose={resetForm}>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <h4 className="text-sm font-semibold text-slate-200">
-            {editingMilestone ? 'Edit Milestone' : 'New Milestone'}
-          </h4>
           <div>
             <label className="block text-xs font-medium text-slate-300">Milestone Name *</label>
             <input
