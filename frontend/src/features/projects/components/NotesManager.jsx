@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import confirmAction from '@/utils/confirmAction';
 import useSettings from '@/features/settings/hooks/useSettings';
 import { formatSettingsDateTime } from '@/features/settings/data/settingsFormatters';
 import Modal from '@/components/ui/Modal';
@@ -48,8 +49,8 @@ export default function NotesManager({ project, notes = [], repository, run }) {
     }
   };
 
-  const handleDelete = (noteId) => {
-    if (window.confirm('Delete this note?')) {
+  const handleDelete = async (noteId) => {
+    if (await confirmAction('Delete this note?')) {
       run(() => repository.deleteNote(noteId));
     }
   };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import confirmAction from '@/utils/confirmAction';
 import { calculateMilestoneMetrics, getDaysDiff } from '../data/projectMetrics.js';
 import Modal from '@/components/ui/Modal';
 
@@ -63,8 +64,8 @@ export default function MilestonesManager({
     run(() => repository.toggleMilestoneCompletion(milestoneId));
   };
 
-  const handleDelete = (milestoneId) => {
-    if (window.confirm('Delete this milestone? Associated tasks will remain in the project but unassigned from this milestone.')) {
+  const handleDelete = async (milestoneId) => {
+    if (await confirmAction('Delete this milestone? Associated tasks will remain in the project but unassigned from this milestone.')) {
       run(() => repository.deleteMilestone(milestoneId, taskRepository));
     }
   };

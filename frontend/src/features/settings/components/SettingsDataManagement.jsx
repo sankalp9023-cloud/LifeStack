@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import confirmAction from '@/utils/confirmAction';
 import useStudyData from '@/features/study/hooks/useStudyData';
 import useProjectData from '@/features/projects/hooks/useProjectData';
 import {
@@ -65,8 +66,8 @@ export default function SettingsDataManagement({
     }
   };
 
-  const restore = (backup) => {
-    if (!window.confirm('Restore this backup? Current settings and module data will be replaced.')) return;
+  const restore = async (backup) => {
+    if (!await confirmAction('Restore this backup? Current settings and module data will be replaced.')) return;
     setBusy(true);
     try {
       restoreAppBackup(backup, settingsStore, studyRepository);
@@ -86,7 +87,7 @@ export default function SettingsDataManagement({
     try {
       const backup = JSON.parse(await file.text());
       validateAppBackup(backup);
-      if (!window.confirm('Import this backup and replace current settings and module data?')) return;
+      if (!await confirmAction('Import this backup and replace current settings and module data?')) return;
       restoreAppBackup(backup, settingsStore, studyRepository);
       report('Backup imported and restored.');
       refreshBackups();
@@ -98,8 +99,8 @@ export default function SettingsDataManagement({
     }
   };
 
-  const removeBackup = (backupId) => {
-    if (!window.confirm('Delete this manual backup?')) return;
+  const removeBackup = async (backupId) => {
+    if (!await confirmAction('Delete this manual backup?')) return;
     try {
       deleteManualBackup(globalThis.localStorage, backupId);
       refreshBackups();

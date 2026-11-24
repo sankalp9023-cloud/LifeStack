@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import confirmAction from '@/utils/confirmAction';
 import useSettings from '@/features/settings/hooks/useSettings';
 import { formatSettingsDate, formatSettingsTime } from '@/features/settings/data/settingsFormatters';
 import Modal from '@/components/ui/Modal';
@@ -118,8 +119,8 @@ export function NotesWorkspace({ data, repository, run, initialLink }) {
                 <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{note.content}</p>
                 <div className="mt-3 flex gap-3 text-sm">
                   <button type="button" className="underline" onClick={() => startEdit(note)}>Edit</button>
-                  <button type="button" className="text-red-300 underline" onClick={() => {
-                    if (window.confirm(`Delete note "${note.title}"?`)) run(() => repository.deleteNote(note.id));
+                  <button type="button" className="text-red-300 underline" onClick={async () => {
+                    if (await confirmAction(`Delete note "${note.title}"?`)) run(() => repository.deleteNote(note.id));
                   }}>Delete</button>
                   <time className="text-slate-500">Updated {dateLabel(note.updatedAt, settings)} {formatSettingsTime(note.updatedAt, settings)}</time>
                 </div>

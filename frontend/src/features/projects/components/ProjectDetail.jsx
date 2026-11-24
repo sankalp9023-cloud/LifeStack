@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import confirmAction from '@/utils/confirmAction';
 import { calculateProjectMetrics, getDaysDiff } from '../data/projectMetrics.js';
 import { PROJECT_STATUSES } from '../data/projectRepository.js';
 import MilestonesManager from './MilestonesManager';
@@ -43,19 +44,19 @@ export default function ProjectDetail({
     run(() => repository.updateProject(project.id, { status: newStatus }));
   };
 
-  const handleToggleArchive = () => {
+  const handleToggleArchive = async () => {
     if (project.status === 'archived') {
       run(() => repository.restoreProject(project.id, 'active'));
     } else {
-      if (window.confirm(`Archive project "${project.name}"?`)) {
+      if (await confirmAction(`Archive project "${project.name}"?`)) {
         run(() => repository.archiveProject(project.id));
       }
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (
-      window.confirm(
+      await confirmAction(
         `Are you sure you want to permanently delete "${project.name}"? All milestones, notes, and resources will be removed. Associated tasks will remain in the global Task Engine but will be unlinked.`
       )
     ) {

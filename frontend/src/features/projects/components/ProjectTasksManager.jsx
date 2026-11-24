@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import confirmAction from '@/utils/confirmAction';
 import { getDaysDiff } from '../data/projectMetrics.js';
 import Modal from '@/components/ui/Modal';
 
@@ -89,8 +90,8 @@ export default function ProjectTasksManager({
     });
   };
 
-  const handleUnassign = (task) => {
-    if (window.confirm(`Unassign "${task.title}" from this project? The task will remain in the global task pool.`)) {
+  const handleUnassign = async (task) => {
+    if (await confirmAction(`Unassign "${task.title}" from this project? The task will remain in the global task pool.`)) {
       run(() => {
         taskRepository.unassignFromProject(task.id);
         repository.logActivity(project.id, 'task_unassigned', `Task "${task.title}" unassigned from project.`);
@@ -98,8 +99,8 @@ export default function ProjectTasksManager({
     }
   };
 
-  const handleDeleteTask = (task) => {
-    if (window.confirm(`Permanently delete task "${task.title}"?`)) {
+  const handleDeleteTask = async (task) => {
+    if (await confirmAction(`Permanently delete task "${task.title}"?`)) {
       run(() => {
         taskRepository.deleteTask(task.id);
         repository.logActivity(project.id, 'task_deleted', `Task "${task.title}" deleted.`);

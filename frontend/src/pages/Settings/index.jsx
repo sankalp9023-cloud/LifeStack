@@ -134,10 +134,11 @@ export default function SettingsPage({ dialogMode = false, dialogSection, onClos
             onNavigate={(id) => navigate(`/settings?section=${encodeURIComponent(id)}`)}
           />
         ) : section === 'profile' ? (
+          <>
           <section className="profile-settings-card space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
             <div className="flex items-center gap-3">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 text-lg font-semibold text-white">
-                {settings.profile.displayName.trim().charAt(0).toUpperCase()}
+                {(user?.name || 'Guest').trim().charAt(0).toUpperCase()}
               </span>
               {editingName ? (
                 <form onSubmit={saveProfileName} className="flex min-w-0 flex-1 items-center gap-2">
@@ -156,7 +157,7 @@ export default function SettingsPage({ dialogMode = false, dialogSection, onClos
               ) : (
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-slate-100">{user?.name || settings.profile.displayName}</p>
+                    <p className="truncate font-medium text-slate-100">{user?.name || 'Guest'}</p>
                     {user?.email ? (
                       <p className="truncate text-xs text-cyan-400">{user.email} · Cloud Account</p>
                     ) : (
@@ -169,7 +170,7 @@ export default function SettingsPage({ dialogMode = false, dialogSection, onClos
                     aria-label="Edit profile name"
                     disabled={!settingsStore}
                     onClick={() => {
-                      setProfileNameDraft(user?.name || settings.profile.displayName);
+                      setProfileNameDraft(user?.name || 'Guest');
                       setEditingName(true);
                     }}
                   >
@@ -203,6 +204,8 @@ export default function SettingsPage({ dialogMode = false, dialogSection, onClos
               </nav>
             )}
           </section>
+          <p className="rounded-lg border border-amber-500/25 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-300" role="note">LifeStack is under development. Features and data handling may change.</p>
+          </>
         ) : section === 'logout' ? (
           <section className="space-y-4 rounded border border-slate-800 bg-slate-900/50 p-4">
             <h3 className="font-semibold text-slate-100">Account Session</h3>
@@ -362,7 +365,7 @@ export default function SettingsPage({ dialogMode = false, dialogSection, onClos
               </section>
             )}
 
-            {section === 'system' && <SystemInformation version={packageInfo.version} />}
+            {section === 'system' && <SystemInformation version={`Beta ${packageInfo.version}`} />}
           </>
         )}
       </div>

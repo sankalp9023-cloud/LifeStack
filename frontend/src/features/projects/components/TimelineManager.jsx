@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import confirmAction from '@/utils/confirmAction';
 import { getDaysDiff } from '../data/projectMetrics.js';
 import Modal from '@/components/ui/Modal';
 
@@ -86,8 +87,8 @@ export default function TimelineManager({
     }
   };
 
-  const handleDeleteCustomDate = (dateId) => {
-    if (window.confirm('Remove this important date?')) {
+  const handleDeleteCustomDate = async (dateId) => {
+    if (await confirmAction('Remove this important date?')) {
       run(() => repository.deleteImportantDate(dateId));
     }
   };

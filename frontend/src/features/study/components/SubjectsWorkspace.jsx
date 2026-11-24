@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import confirmAction from '@/utils/confirmAction';
 import { getChapterProgress, getSubjectProgress, getTopicCompletion } from '../data/studyMetrics';
 import Modal from '@/components/ui/Modal';
 
@@ -71,8 +72,8 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
                     </button>
                     <div className="flex gap-3 text-xs">
                       <button type="button" className="study-control study-control-edit" onClick={() => { selectSubject(subject); setEditForm({ name: subject.name, goal: subject.goal || '', description: subject.description || '' }); setShowSubjectEdit(true); }}>Edit</button>
-                      <button type="button" className="study-control study-control-delete" onClick={() => {
-                        if (window.confirm(`Delete ${subject.name} and its chapters, topics, notes, practice, and assessments?`)) {
+                      <button type="button" className="study-control study-control-delete" onClick={async () => {
+                        if (await confirmAction(`Delete ${subject.name} and its chapters, topics, notes, practice, and assessments?`)) {
                           if (run(() => repository.deleteSubject(subject.id)) && selectedId === subject.id) setSelectedId('');
                         }
                       }}>Delete</button>
@@ -100,8 +101,8 @@ export default function SubjectsWorkspace({ data, repository, run, onAddNote }) 
             </div>
             <div className="flex flex-wrap gap-2 text-sm">
               <button type="button" className="study-control study-control-edit" onClick={() => { setEditForm({ name: selectedSubject.name, goal: selectedSubject.goal || '', description: selectedSubject.description || '' }); setShowSubjectEdit(true); }}>Edit subject</button>
-              <button type="button" className="study-control study-control-delete" onClick={() => {
-                if (window.confirm(`Delete ${selectedSubject.name} and its chapters, topics, notes, practice, and assessments?`)) {
+              <button type="button" className="study-control study-control-delete" onClick={async () => {
+                if (await confirmAction(`Delete ${selectedSubject.name} and its chapters, topics, notes, practice, and assessments?`)) {
                   if (run(() => repository.deleteSubject(selectedId))) setSelectedId('');
                 }
               }}>Delete subject</button>
@@ -198,8 +199,8 @@ function ChapterCard({ chapter, data, repository, run, onAddNote }) {
         ) : <h3 className="font-medium">{chapter.name} <span className="text-sm font-normal text-slate-400">· {progress.completed}/{progress.total} topics complete</span></h3>}
         <div className="flex gap-3 text-sm">
           <button type="button" className="underline" onClick={() => { setEditName(chapter.name); setEditing(!editing); }}>{editing ? 'Cancel' : 'Edit'}</button>
-          <button type="button" className="text-red-300 underline" onClick={() => {
-            if (window.confirm(`Delete chapter "${chapter.name}" and its topics?`)) run(() => repository.deleteChapter(chapter.id));
+          <button type="button" className="text-red-300 underline" onClick={async () => {
+            if (await confirmAction(`Delete chapter "${chapter.name}" and its topics?`)) run(() => repository.deleteChapter(chapter.id));
           }}>Delete</button>
         </div>
       </div>
@@ -262,8 +263,8 @@ function TopicCard({ topic, data, repository, run, onAddNote }) {
             topicId: topic.id,
           })}>Add note</button>
           <button type="button" className="underline" onClick={() => run(() => repository.createRevision(topic.id))}>Mark for revision</button>
-          <button type="button" className="text-red-300 underline" onClick={() => {
-            if (window.confirm(`Delete topic "${topic.name}"? Linked notes and history are retained where possible.`)) run(() => repository.deleteTopic(topic.id));
+          <button type="button" className="text-red-300 underline" onClick={async () => {
+            if (await confirmAction(`Delete topic "${topic.name}"? Linked notes and history are retained where possible.`)) run(() => repository.deleteTopic(topic.id));
           }}>Delete</button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import confirmAction from '@/utils/confirmAction';
 import { RESOURCE_TYPES } from '../data/projectRepository.js';
 import Modal from '@/components/ui/Modal';
 
@@ -56,8 +57,8 @@ export default function ResourcesManager({ project, resources = [], repository, 
     }
   };
 
-  const handleDelete = (resourceId) => {
-    if (window.confirm('Delete this resource?')) {
+  const handleDelete = async (resourceId) => {
+    if (await confirmAction('Delete this resource?')) {
       run(() => repository.deleteResource(resourceId));
     }
   };
